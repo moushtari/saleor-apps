@@ -3,3 +3,7 @@ npm-debug.log
 README.md
 .next
 .git
+.terraform
+*.tfstate
+*.tf
+*.out

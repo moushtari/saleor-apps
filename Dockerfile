@@ -21,8 +21,8 @@ ENV NEXT_TELEMETRY_DISABLED 1
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
-COPY --from=builder --chown=nextjs:nodejs /app/apps/slack/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/apps/slack/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/apps/slack/public ./apps/slack/public
 COPY --from=builder --chown=nextjs:nodejs /app/apps/slack/.next/static ./apps/slack/.next/static
 
 USER nextjs
