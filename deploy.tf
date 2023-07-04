@@ -27,11 +27,11 @@ resource "google_cloud_run_v2_service" "saleor_app_slack" {
 
   template {
     containers {
-      image = "europe-west3-docker.pkg.dev/moushtari/moushtari-repo/saleor-app-slack:1.6.6"
+      image = "europe-west3-docker.pkg.dev/moushtari/moushtari-repo/saleor-app-slack:1.7.0"
 
       env {
         name  = "NEXT_PUBLIC_SALEOR_HOST_URL"
-        value = "https://staging.moushtari.com"
+        value = "https://staging.moushtari.com:19421"
       }
       env {
         name  = "APL"
