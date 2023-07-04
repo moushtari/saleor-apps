@@ -7,3 +7,14 @@ README.md
 *.tfstate
 *.tf
 *.out
+
+apps/cms
+apps/crm
+apps/data-importer
+apps/emails-and-messages
+apps/invoices
+apps/klaviyo
+apps/monitoring
+apps/products-feed
+apps/search
+apps/taxes
