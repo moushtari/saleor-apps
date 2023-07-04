@@ -1,6 +1,6 @@
 {
   "name": "saleor-app-taxes",
-  "version": "1.8.2",
+  "version": "1.9.0",
   "scripts": {
     "build": "pnpm generate && next build",
     "dev": "pnpm generate && NODE_OPTIONS='--inspect' next dev",
@@ -13,7 +13,7 @@
   },
   "dependencies": {
     "@hookform/resolvers": "^2.9.10",
-    "@saleor/app-sdk": "0.40.1",
+    "@saleor/app-sdk": "0.41.0",
     "@saleor/apps-shared": "workspace:*",
     "@saleor/apps-ui": "workspace:*",
     "@saleor/macaw-ui": "^0.8.0-pre.84",
@@ -32,7 +32,7 @@
     "graphql-tag": "^2.12.6",
     "jotai": "^2.0.0",
     "jsdom": "^20.0.3",
-    "next": "13.3.0",
+    "next": "13.4.8",
     "pino": "^8.14.1",
     "pino-pretty": "^10.0.0",
     "react": "18.2.0",

@@ -1,6 +1,6 @@
 {
   "name": "saleor-app-emails-and-messages",
-  "version": "1.7.1",
+  "version": "1.8.0",
   "scripts": {
     "build": "pnpm generate && next build",
     "dev": "pnpm generate && NODE_OPTIONS='--inspect' next dev",
@@ -14,7 +14,7 @@
   "dependencies": {
     "@hookform/resolvers": "^3.1.0",
     "@monaco-editor/react": "^4.4.6",
-    "@saleor/app-sdk": "0.40.1",
+    "@saleor/app-sdk": "0.41.0",
     "@saleor/apps-shared": "workspace:*",
     "@saleor/apps-ui": "workspace:*",
     "@saleor/macaw-ui": "0.8.0-pre.95",
@@ -37,7 +37,7 @@
     "html-to-text": "^9.0.3",
     "jsdom": "^20.0.3",
     "mjml": "^4.13.0",
-    "next": "13.3.0",
+    "next": "13.4.8",
     "nodemailer": "^6.9.1",
     "pino": "^8.14.1",
     "pino-pretty": "^10.0.0",
@@ -74,6 +74,6 @@
   },
   "private": true,
   "saleor": {
-    "schemaVersion": "3.11.7"
+    "schemaVersion": "3.13"
   }
 }

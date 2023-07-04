@@ -6,24 +6,34 @@ import { invoiceRequestedWebhook } from "./webhooks/invoice-requested";
 import { REQUIRED_SALEOR_VERSION } from "../../saleor-app";
 
 export default createManifestHandler({
-  async manifestFactory(context) {
+  async manifestFactory({ appBaseUrl }) {
+    const iframeBaseUrl = process.env.APP_IFRAME_BASE_URL ?? appBaseUrl;
+    const apiBaseURL = process.env.APP_API_BASE_URL ?? appBaseUrl;
+
     const manifest: AppManifest = {
-      name: "Invoices",
-      tokenTargetUrl: `${context.appBaseUrl}/api/register`,
-      appUrl: context.appBaseUrl,
-      permissions: ["MANAGE_ORDERS"],
-      id: "saleor.app.invoices",
-      version: packageJson.version,
-      webhooks: [invoiceRequestedWebhook.getWebhookManifest(context.appBaseUrl)],
-      extensions: [],
-      supportUrl: "https://github.com/saleor/apps/discussions",
-      homepageUrl: "https://github.com/saleor/apps",
-      dataPrivacyUrl: "https://saleor.io/legal/privacy/",
+      about:
+        "An app that generates PDF invoices for Orders and stores them in Saleor file storage.",
+      appUrl: iframeBaseUrl,
       author: "Saleor Commerce",
+      dataPrivacyUrl: "https://saleor.io/legal/privacy/",
+      extensions: [],
+      homepageUrl: "https://github.com/saleor/apps",
+      id: "saleor.app.invoices",
+      name: "Invoices",
+      permissions: ["MANAGE_ORDERS"],
       /**
        * Requires 3.10 due to invoices event payload - in previous versions, order reference was missing
        */
       requiredSaleorVersion: REQUIRED_SALEOR_VERSION,
+      supportUrl: "https://github.com/saleor/apps/discussions",
+      tokenTargetUrl: `${apiBaseURL}/api/register`,
+      version: packageJson.version,
+      webhooks: [invoiceRequestedWebhook.getWebhookManifest(apiBaseURL)],
+      brand: {
+        logo: {
+          default: `${apiBaseURL}/logo.png`,
+        },
+      },
     };
 
     return manifest;

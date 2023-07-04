@@ -1,16 +1,23 @@
 import { NextPage } from "next";
-import { CategoryMapping } from "../modules/category-mapping/ui/category-mapping";
 import { Breadcrumbs } from "@saleor/apps-ui";
-import { Box } from "@saleor/macaw-ui/next";
+import { Box, Text } from "@saleor/macaw-ui/next";
+import dynamic from "next/dynamic";
+
+const DynamicCategoryMapping = dynamic(
+  () => import("../modules/category-mapping/ui/category-mapping").then((m) => m.CategoryMapping),
+  {
+    loading: () => <Text>Loading...</Text>,
+  }
+);
 
 const CategoriesPage: NextPage = () => {
   return (
-    <Box>
+    <Box data-testid="categories-mapping-container">
       <Breadcrumbs marginBottom={5}>
         <Breadcrumbs.Item href={"/"}>Configuration</Breadcrumbs.Item>
         <Breadcrumbs.Item>Categories Mapping</Breadcrumbs.Item>
       </Breadcrumbs>
-      <CategoryMapping />
+      <DynamicCategoryMapping />
     </Box>
   );
 };

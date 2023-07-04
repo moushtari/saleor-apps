@@ -9,31 +9,35 @@ import { orderFulfilledAsyncWebhook } from "./webhooks/order-fulfilled";
 import { REQUIRED_SALEOR_VERSION } from "../../../saleor-app";
 
 export default createManifestHandler({
-  async manifestFactory(context) {
+  async manifestFactory({ appBaseUrl }) {
+    const iframeBaseUrl = process.env.APP_IFRAME_BASE_URL ?? appBaseUrl;
+    const apiBaseURL = process.env.APP_API_BASE_URL ?? appBaseUrl;
+
     const manifest: AppManifest = {
-      name: "Taxes",
-      tokenTargetUrl: `${context.appBaseUrl}/api/register`,
-      appUrl: context.appBaseUrl,
-      permissions: ["HANDLE_TAXES", "MANAGE_ORDERS"],
-      id: "saleor.app.taxes",
-      version: packageJson.version,
-      webhooks: [
-        orderCalculateTaxesSyncWebhook.getWebhookManifest(context.appBaseUrl),
-        checkoutCalculateTaxesSyncWebhook.getWebhookManifest(context.appBaseUrl),
-        orderCreatedAsyncWebhook.getWebhookManifest(context.appBaseUrl),
-        orderFulfilledAsyncWebhook.getWebhookManifest(context.appBaseUrl),
-      ],
-      extensions: [],
-      homepageUrl: "https://github.com/saleor/apps",
-      supportUrl: "https://github.com/saleor/apps/discussions",
+      about: "Taxes App allows dynamic taxes calculations for orders",
+      appUrl: iframeBaseUrl,
       author: "Saleor Commerce",
-      dataPrivacyUrl: "https://saleor.io/legal/privacy/",
-      requiredSaleorVersion: REQUIRED_SALEOR_VERSION,
       brand: {
         logo: {
-          default: `${context.appBaseUrl}/logo.png`,
+          default: `${apiBaseURL}/logo.png`,
         },
       },
+      dataPrivacyUrl: "https://saleor.io/legal/privacy/",
+      extensions: [],
+      homepageUrl: "https://github.com/saleor/apps",
+      id: "saleor.app.taxes",
+      name: "Taxes",
+      permissions: ["HANDLE_TAXES", "MANAGE_ORDERS"],
+      requiredSaleorVersion: REQUIRED_SALEOR_VERSION,
+      supportUrl: "https://github.com/saleor/apps/discussions",
+      tokenTargetUrl: `${apiBaseURL}/api/register`,
+      version: packageJson.version,
+      webhooks: [
+        orderCalculateTaxesSyncWebhook.getWebhookManifest(apiBaseURL),
+        checkoutCalculateTaxesSyncWebhook.getWebhookManifest(apiBaseURL),
+        orderCreatedAsyncWebhook.getWebhookManifest(apiBaseURL),
+        orderFulfilledAsyncWebhook.getWebhookManifest(apiBaseURL),
+      ],
     };
 
     return manifest;
