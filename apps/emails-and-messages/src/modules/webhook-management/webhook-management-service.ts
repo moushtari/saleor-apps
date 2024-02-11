@@ -8,11 +8,11 @@ import { Client } from "urql";
 import { createAppWebhook, deleteAppWebhook, fetchAppWebhooks } from "./api-operations";
 import { notifyWebhook } from "../../pages/api/webhooks/notify";
 import { MessageEventTypes } from "../event-handlers/message-event-types";
-import { createLogger } from "@saleor/apps-shared";
 import { WebhookEventTypeAsyncEnum } from "../../../generated/graphql";
 import { giftCardSentWebhook } from "../../pages/api/webhooks/gift-card-sent";
 import { FeatureFlagService } from "../feature-flag-service/feature-flag-service";
-import { FeatureFlagsState } from "../feature-flag-service/get-feature-flags";
+import { orderRefundedWebhook } from "../../pages/api/webhooks/order-refunded";
+import { createLogger } from "../../logger";
 
 export const AppWebhooks = {
   giftCardSentWebhook,
@@ -23,6 +23,7 @@ export const AppWebhooks = {
   orderCreatedWebhook,
   orderFulfilledWebhook,
   orderFullyPaidWebhook,
+  orderRefundedWebhook,
 };
 
 export type AppWebhook = keyof typeof AppWebhooks;
@@ -40,11 +41,11 @@ export const eventToWebhookMapping: Record<MessageEventTypes, AppWebhook> = {
   ORDER_CREATED: "orderCreatedWebhook",
   ORDER_FULFILLED: "orderFulfilledWebhook",
   ORDER_FULLY_PAID: "orderFullyPaidWebhook",
+  ORDER_REFUNDED: "orderRefundedWebhook",
+  ORDER_FULFILLMENT_UPDATE: "notifyWebhook",
 };
 
-const logger = createLogger({
-  name: "WebhookManagementService",
-});
+const logger = createLogger("WebhookManagementService");
 
 export class WebhookManagementService {
   private appBaseUrl: string;
@@ -78,11 +79,11 @@ export class WebhookManagementService {
     return Object.fromEntries(
       Object.keys(AppWebhooks).map((webhook) => {
         const webhookData = webhooks.find(
-          (w) => w.name === AppWebhooks[webhook as AppWebhook].name
+          (w) => w.name === AppWebhooks[webhook as AppWebhook].name,
         );
 
         return [webhook as AppWebhook, Boolean(webhookData?.isActive)];
-      })
+      }),
     );
   }
 

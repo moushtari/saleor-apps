@@ -1,5 +1,266 @@
 # saleor-app-search
 
+## 1.20.1
+
+### Patch Changes
+
+- Updated dependencies [2683431]
+  - @saleor/apps-logger@1.1.1
+
+## 1.20.0
+
+### Minor Changes
+
+- 93848f2: Added Open Telemetry setup, including tracing for api handlers and logger, connected to Sentry and Otel.
+
+### Patch Changes
+
+- Updated dependencies [93848f2]
+- Updated dependencies [93848f2]
+  - @saleor/apps-logger@1.1.0
+
+## 1.19.3
+
+### Patch Changes
+
+- 5f564a0: Updated @saleor/app-sdk to 0.47.2
+
+## 1.19.2
+
+### Patch Changes
+
+- 531e7c1: Disabled Sentry tracing and Replays by default
+
+## 1.19.1
+
+### Patch Changes
+
+- 99f7066: Updated Macaw UI to 1.0.0-pre.7. Removed legacy Material UI dependency from older Macaw. Code was updated to work properly with some API changes
+- Updated dependencies [99f7066]
+  - @saleor/react-hook-form-macaw@0.2.6
+  - @saleor/apps-shared@1.9.2
+  - @saleor/apps-ui@1.2.2
+  - @saleor/webhook-utils@0.0.3
+
+## 1.19.0
+
+### Minor Changes
+
+- 563fca9: Added "sku" field to the object mapped to Algolia. If sku is defined in the product variant, it will be passed to the synchronized index.
+
+## 1.18.0
+
+### Minor Changes
+
+- a50df02: Reduced Sentry traces sample rate to 0.1
+- 9fc5b1a: Added new field to the index: productPricing that contains price range (start-stop). Now each variant can be displayed with pricing of cheapest and most expensive ones.
+
+### Patch Changes
+
+- f4c67e8: Updated TRPC version
+
+## 1.17.2
+
+### Patch Changes
+
+- fdabc51: Mapped app-sdk package to root library
+- Updated dependencies [fdabc51]
+  - @saleor/webhook-utils@0.0.2
+  - @saleor/apps-shared@1.9.1
+  - @saleor/apps-ui@1.2.1
+
+## 1.17.1
+
+### Patch Changes
+
+- 148a6d7: Updated Sentry to 7.77.0
+
+## 1.17.0
+
+### Minor Changes
+
+- 556906a: Reduced memory limit for UPDATED\* webhooks to 256mb
+
+## 1.16.0
+
+### Minor Changes
+
+- 1982d81: Added a new `pricing` field to the Algolia object representation. It now passes variant pricing representation from GraphQL:
+
+  ```graphQL
+      price {
+        gross {
+          amount
+        }
+        net {
+          amount
+        }
+      }
+      discount {
+        gross {
+          amount
+        }
+        net {
+          amount
+        }
+      }
+      onSale
+      priceUndiscounted {
+        gross {
+          amount
+        }
+        net {
+          amount
+        }
+      }
+  ```
+
+### Patch Changes
+
+- 5d3d81d: Bumped @hookform/resolvers from 2.9.11 to 3.3.1
+- 5dee65a: Updated dependencies:
+  - @graphql-codegen/cli@5.0.0
+- 2e29699: Updated Sentry package
+- 7e0755e: Webhook migration scripts has been moved to the shared package.
+- Updated dependencies [5dee65a]
+- Updated dependencies [7e0755e]
+  - @saleor/webhook-utils@0.0.1
+
+## 1.15.0
+
+### Minor Changes
+
+- 1e3c08c: Added fields filtering form. Unused fields can be unchecked to match Algolia limits. By default every field is selected
+- ed30a81: Added "Saleor Commerce" as an author in the Manifest
+
+### Patch Changes
+
+- e8660e8: Implemented shared getApBaseUrl
+- e8660e8: Replaced GraphQL provider with shared package
+- e8660e8: Replaced AppSections implementation with the shared package
+- ed30a81: Refactor: Migrated private metadata of the app (used for settings) - previously each setting was saved in a dedicated metadata key. Now entire config is kept as JSON in a single field. This is non-breaking change - app will fallback to old config if needed.
+- ed30a81: Refactor: Extracted shared webhook logic, like clients creation and settings fetching to a shared function that creates entire context. Webhook handlers LoC decreased by half
+- e8660e8: Implemented ThemeSynchronizer from shared package
+- e8660e8: Fixed broken configuration form when legacy metadata was fetched
+- Updated dependencies [e8660e8]
+- Updated dependencies [e8660e8]
+- Updated dependencies [e8660e8]
+- Updated dependencies [e8660e8]
+- Updated dependencies [e8660e8]
+- Updated dependencies [e8660e8]
+  - @saleor/apps-shared@1.9.0
+  - @saleor/apps-ui@1.2.0
+
+## 1.14.0
+
+### Minor Changes
+
+- 2a1385b: Added new field to products document: descriptionPlaintext. It contains the product description converted to plaintext format which can be used to full text search.
+- 2a1385b: Added Algolia index configuration helper, which sets up recommended settings: distinct results based on Product ID, faceting filters and searchable attributes.
+
+### Patch Changes
+
+- 2a1385b: Added script responsible for webhook migration.
+- a81f061: Updated Macaw to pre-127
+- 2a1385b: Fixed issue with stale product variants after product deletion or channel visibility settings change.
+- fcc37e7: Remove clsx package from the projects no longer using it.
+- 0f84985: Refactor: Introduced tRPC and re-implemented /api/configuration endpoint to the tRPC controller.
+
+  _This does not affect the end-user functionality_
+
+- Updated dependencies [2a1385b]
+- Updated dependencies [a81f061]
+- Updated dependencies [fcc37e7]
+  - @saleor/apps-shared@1.8.1
+  - @saleor/react-hook-form-macaw@0.2.5
+  - @saleor/apps-ui@1.1.8
+
+## 1.13.1
+
+### Patch Changes
+
+- 8b3d961: Updated Macaw UI to pre.118
+- Updated dependencies [8b3d961]
+- Updated dependencies [c50797e]
+  - @saleor/react-hook-form-macaw@0.2.4
+  - @saleor/apps-shared@1.8.0
+  - @saleor/apps-ui@1.1.7
+
+## 1.13.0
+
+### Minor Changes
+
+- 69fe973: Extended search model with two new fields:
+
+  - `inStock`: returns true if stock is available. To keep this up to date, the application subscribes to `ProductVariantOutOfStock` and `ProductVariantBackInStock` events
+  - `media`: array of objects containing URL and type of given file (video or image)
+
+  To enable those features, open App configuration page and click on the `Update webhooks` button. To update existing data start a data import.
+
+## 1.12.1
+
+### Patch Changes
+
+- 261957f: Updated dependencies: vite, vitest, eslint, prettier, dotenv, turbo, syncpack, changesets, lint staged
+- Updated dependencies [261957f]
+  - @saleor/react-hook-form-macaw@0.2.3
+  - @saleor/apps-shared@1.7.6
+  - @saleor/apps-ui@1.1.6
+
+## 1.12.0
+
+### Minor Changes
+
+- 2cb7e5e: Improved attributes mapping. Now Algolia will receive better products data:
+  - Added `otherVariants` field which is _an array of variant id strings_. It will only contain other variants, so if the array is empty, it means the variant is the only one. It can be quickly used to count alternative variants or to reference them by ID.
+  - Added `variantMetadata` field. Now `metadata` contains data for product parent and `variantMetadata` for each variant.
+  - Improved JSON fields mapping. Now json-like fields will be sent to Algolia as structure jsons, not strings. This include: `description`, `metadata`, `variantMetadata`, `otherVariants`.
+
+## 1.11.2
+
+### Patch Changes
+
+- 2fab86b: Updated graphql package to 16.7.1 and @graphql-codegen related dependencies to the latest version.
+- aa6fec1: Updated Macaw UI to pre-106
+- Updated dependencies [aa6fec1]
+- Updated dependencies [aa6fec1]
+  - @saleor/react-hook-form-macaw@0.2.2
+  - @saleor/apps-shared@1.7.5
+  - @saleor/apps-ui@1.1.5
+
+## 1.11.1
+
+### Patch Changes
+
+- 70cb741: Update Zod to 3.21.4
+- e7c2d3a: Updated and ESLint dependencies
+- 3c6cd4c: Updated the @saleor/app-sdk package to version 0.41.1.
+- 6210447: Updated @tanstack/react-query 4.29.19
+- Updated dependencies [70cb741]
+- Updated dependencies [e7c2d3a]
+- Updated dependencies [3c6cd4c]
+- Updated dependencies [6210447]
+  - @saleor/react-hook-form-macaw@0.2.1
+  - @saleor/apps-shared@1.7.4
+  - @saleor/apps-ui@1.1.4
+
+## 1.11.0
+
+### Minor Changes
+
+- a1f083c: Filled "about" field in App Manifest. Dashboard will display it in app details page now.
+- 47102ba: Added additional ENV variables (see each app's .env.example), that can overwrite app base URL. This change allows easy apps development using Docker
+
+### Patch Changes
+
+- 2d77bca: Updated Next.js to 13.4.8
+- 6299e06: Update @saleor/app-sdk to 0.41.0
+- Updated dependencies [2d77bca]
+- Updated dependencies [6299e06]
+  - @saleor/apps-shared@1.7.3
+  - @saleor/apps-ui@1.1.3
+  - @saleor/react-hook-form-macaw@0.2.0
+
 ## 1.10.0
 
 ### Minor Changes

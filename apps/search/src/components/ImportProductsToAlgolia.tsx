@@ -1,9 +1,9 @@
-import { Box, Button, Text } from "@saleor/macaw-ui/next";
+import { Box, Button, Text } from "@saleor/macaw-ui";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { AlgoliaSearchProvider } from "../lib/algolia/algoliaSearchProvider";
-import { useConfiguration } from "../lib/configuration";
 import { Products, useQueryAllProducts } from "./useQueryAllProducts";
-import { useWebhooksStatus } from "../lib/useWebhooksStatus";
+import { trpcClient } from "../modules/trpc/trpc-client";
+import { Layout } from "@saleor/apps-ui";
 
 const BATCH_SIZE = 100;
 
@@ -15,21 +15,22 @@ export const ImportProductsToAlgolia = () => {
 
   const products = useQueryAllProducts(!started);
 
-  const algoliaConfiguration = useConfiguration();
+  const { data: algoliaConfiguration } = trpcClient.configuration.getConfig.useQuery();
 
   const searchProvider = useMemo(() => {
-    if (!algoliaConfiguration.data?.appId || !algoliaConfiguration.data.secretKey) {
+    if (!algoliaConfiguration?.appConfig?.appId || !algoliaConfiguration.appConfig?.secretKey) {
       return null;
     }
     return new AlgoliaSearchProvider({
-      appId: algoliaConfiguration.data.appId,
-      apiKey: algoliaConfiguration.data.secretKey,
-      indexNamePrefix: algoliaConfiguration.data.indexNamePrefix,
+      appId: algoliaConfiguration.appConfig.appId,
+      apiKey: algoliaConfiguration.appConfig.secretKey,
+      indexNamePrefix: algoliaConfiguration.appConfig.indexNamePrefix,
+      enabledKeys: algoliaConfiguration.fieldsMapping.enabledAlgoliaFields,
     });
   }, [
-    algoliaConfiguration?.data?.appId,
-    algoliaConfiguration?.data?.indexNamePrefix,
-    algoliaConfiguration?.data?.secretKey,
+    algoliaConfiguration?.appConfig?.appId,
+    algoliaConfiguration?.appConfig?.indexNamePrefix,
+    algoliaConfiguration?.appConfig?.secretKey,
   ]);
 
   const importProducts = useCallback(() => {
@@ -63,7 +64,19 @@ export const ImportProductsToAlgolia = () => {
   }, [searchProvider, currentProductIndex, isAlgoliaImporting, products]);
 
   return (
-    <Box __cursor={started ? "wait" : "auto"}>
+    <Layout.AppSectionCard
+      footer={
+        searchProvider &&
+        algoliaConfigured && (
+          <Box display={"flex"} justifyContent={"flex-end"}>
+            <Button disabled={started || !searchProvider} onClick={importProducts}>
+              Start importing
+            </Button>
+          </Box>
+        )
+      }
+      __cursor={started ? "wait" : "auto"}
+    >
       {searchProvider && algoliaConfigured ? (
         <Box>
           <Text variant={"heading"} as={"p"} marginBottom={1.5}>
@@ -75,11 +88,6 @@ export const ImportProductsToAlgolia = () => {
           <Text marginBottom={5} variant={"bodyStrong"}>
             Do not close the app - its running client-side
           </Text>
-          <Box display={"flex"} justifyContent={"flex-end"}>
-            <Button disabled={started || !searchProvider} onClick={importProducts}>
-              Start importing
-            </Button>
-          </Box>
         </Box>
       ) : (
         <Box>
@@ -112,7 +120,7 @@ export const ImportProductsToAlgolia = () => {
           />
         </div>
       )}
-    </Box>
+    </Layout.AppSectionCard>
   );
 };
 

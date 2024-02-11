@@ -1,10 +1,11 @@
-import { Box, Button, Text } from "@saleor/macaw-ui/next";
+import { Box, Button, Text } from "@saleor/macaw-ui";
 import { useRouter } from "next/router";
 import { ProviderName } from "../../modules/provider-connections/provider-connections";
 import { AppCard } from "../../modules/ui/app-card";
 import { AppColumns } from "../../modules/ui/app-columns";
 import { ProviderLabel } from "../../modules/ui/provider-label";
 import { Section } from "../../modules/ui/app-section";
+import { AppPageLayout } from "../../modules/ui/app-page-layout";
 
 const Header = () => {
   return (
@@ -38,7 +39,7 @@ const providerConfig = {
   avatax: {
     description: (
       <p>
-        Avatax is a comprehensive tax automation software service that helps businesses calculate
+        AvaTax is a comprehensive tax automation software service that helps businesses calculate
         and manage sales tax accurately and efficiently.
       </p>
     ),
@@ -107,12 +108,22 @@ const ChooseProvider = () => {
 
 const NewProviderPage = () => {
   return (
-    <main>
-      <AppColumns top={<Header />}>
-        <Intro />
-        <ChooseProvider />
-      </AppColumns>
-    </main>
+    <AppPageLayout
+      breadcrumbs={[
+        {
+          href: "/configuration",
+          label: "Configuration",
+        },
+        {
+          href: "/providers",
+          label: "Providers",
+        },
+      ]}
+      top={<Header />}
+    >
+      <Intro />
+      <ChooseProvider />
+    </AppPageLayout>
   );
 };
 

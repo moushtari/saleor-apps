@@ -1,58 +1,15 @@
 import { NextWebhookApiHandler, SaleorAsyncWebhook } from "@saleor/app-sdk/handlers/next";
 import { saleorApp } from "../../../saleor-app";
-import { createLogger, createGraphQLClient } from "@saleor/apps-shared";
+import { createGraphQLClient } from "@saleor/apps-shared";
 import { sendEventMessages } from "../../../modules/event-handlers/send-event-messages";
-import { MessageEventTypes } from "../../../modules/event-handlers/message-event-types";
+import { NotifySubscriptionPayload, notifyEventMapping } from "../../../lib/notify-event-types";
+import { withOtel } from "@saleor/apps-otel";
+import { createLogger } from "../../../logger";
 
 /*
- * Notify event handles multiple event types which are recognized based on payload field `notify_event`.
- * Handler recognizes if event is one of the supported typed and sends appropriate message.
+ * The Notify webhook is triggered on multiple Saleor events.
+ * Type of the message is determined by `notify_event` field in the payload.
  */
-
-interface NotifySubscriptionPayload {
-  notify_event: string;
-  payload: NotifyEventPayload;
-  meta: Meta;
-}
-
-interface Meta {
-  issued_at: Date;
-  version: string;
-  issuing_principal: IssuingPrincipal;
-}
-
-interface IssuingPrincipal {
-  id: null | string;
-  type: null | string;
-}
-
-export interface NotifyEventPayload {
-  user: User;
-  recipient_email: string;
-  channel_slug: string;
-  domain: string;
-  site_name: string;
-  logo_url: string;
-  token?: string;
-  confirm_url?: string;
-  reset_url?: string;
-  delete_url?: string;
-  old_email?: string;
-  new_email?: string;
-  redirect_url?: string;
-}
-
-interface User {
-  id: string;
-  email: string;
-  first_name: string;
-  last_name: string;
-  is_staff: boolean;
-  is_active: boolean;
-  private_metadata: Record<string, string>;
-  metadata: Record<string, string>;
-  language_code: string;
-}
 
 export const notifyWebhook = new SaleorAsyncWebhook<NotifySubscriptionPayload>({
   name: "notify",
@@ -62,11 +19,9 @@ export const notifyWebhook = new SaleorAsyncWebhook<NotifySubscriptionPayload>({
   query: "{}", // We are using the default payload instead of subscription
 });
 
-const handler: NextWebhookApiHandler<NotifySubscriptionPayload> = async (req, res, context) => {
-  const logger = createLogger({
-    webhook: notifyWebhook.name,
-  });
+const logger = createLogger(notifyWebhook.webhookPath);
 
+const handler: NextWebhookApiHandler<NotifySubscriptionPayload> = async (req, res, context) => {
   logger.debug("Webhook received");
 
   const { payload, authData } = context;
@@ -80,22 +35,12 @@ const handler: NextWebhookApiHandler<NotifySubscriptionPayload> = async (req, re
       .json({ error: "Email recipient has not been specified in the event payload." });
   }
 
-  // Notify webhook event groups multiple event types under the one webhook. We need to map it to events recognized by the App
-  const notifyEventMapping: Record<string, MessageEventTypes> = {
-    account_confirmation: "ACCOUNT_CONFIRMATION",
-    account_delete: "ACCOUNT_DELETE",
-    account_password_reset: "ACCOUNT_PASSWORD_RESET",
-    account_change_email_request: "ACCOUNT_CHANGE_EMAIL_REQUEST",
-    account_change_email_confirm: "ACCOUNT_CHANGE_EMAIL_CONFIRM",
-  };
-
+  // Since NOTIFY can be send on events unrelated to this app, lack of mapping means the App does not support it
   const event = notifyEventMapping[payload.notify_event];
 
   if (!event) {
-    logger.error(`The type of received notify event (${payload.notify_event}) is not supported.`);
-    return res
-      .status(200)
-      .json({ error: "Email recipient has not been specified in the event payload." });
+    logger.debug(`The type of received notify event (${payload.notify_event}) is not supported.`);
+    return res.status(200).json({ message: `${payload.notify_event} event is not supported.` });
   }
 
   const client = createGraphQLClient({
@@ -115,7 +60,7 @@ const handler: NextWebhookApiHandler<NotifySubscriptionPayload> = async (req, re
   return res.status(200).json({ message: "The event has been handled" });
 };
 
-export default notifyWebhook.createHandler(handler);
+export default withOtel(notifyWebhook.createHandler(handler), "api/webhooks/notify");
 
 export const config = {
   api: {

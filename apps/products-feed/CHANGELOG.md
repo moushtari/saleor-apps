@@ -1,5 +1,234 @@
 # saleor-app-products-feed
 
+## 1.15.0
+
+### Minor Changes
+
+- 4ef6539: You can now map GTIN attribute from Saleor to your Google Feed.
+
+## 1.14.2
+
+### Patch Changes
+
+- 5f564a0: Updated @saleor/app-sdk to 0.47.2
+
+## 1.14.1
+
+### Patch Changes
+
+- 531e7c1: Disabled Sentry tracing and Replays by default
+
+## 1.14.0
+
+### Minor Changes
+
+- 5eb17b2: Added "weight" attribute to the Google product feed.
+
+  The attribute is added to the item entry when weight is defined and product is marked as requiring a shipping.
+
+### Patch Changes
+
+- 99f7066: Updated Macaw UI to 1.0.0-pre.7. Removed legacy Material UI dependency from older Macaw. Code was updated to work properly with some API changes
+- Updated dependencies [99f7066]
+  - @saleor/react-hook-form-macaw@0.2.6
+  - @saleor/apps-shared@1.9.2
+  - @saleor/apps-ui@1.2.2
+  - @saleor/webhook-utils@0.0.3
+
+## 1.13.0
+
+### Minor Changes
+
+- a50df02: Reduced Sentry traces sample rate to 0.1
+
+### Patch Changes
+
+- f4c67e8: Updated TRPC version
+
+## 1.12.5
+
+### Patch Changes
+
+- fdabc51: Mapped app-sdk package to root library
+- Updated dependencies [fdabc51]
+  - @saleor/webhook-utils@0.0.2
+  - @saleor/apps-shared@1.9.1
+  - @saleor/apps-ui@1.2.1
+
+## 1.12.4
+
+### Patch Changes
+
+- 148a6d7: Updated Sentry to 7.77.0
+
+## 1.12.3
+
+### Patch Changes
+
+- c66e70c: Fixed lambda execution time on Vercel deployments with `vercel.json` file.
+
+## 1.12.2
+
+### Patch Changes
+
+- ae6dbb1: Removed webhooks on product changes used for feed cache due to changed max execution time.
+- ae6dbb1: Changed Vercel's maximum execution time to be 5 minutes for feed generation. This should help with the previous limits of 60s, that was not enough for feed to be generated.
+
+## 1.12.1
+
+### Patch Changes
+
+- 5d3d81d: Bumped @hookform/resolvers from 2.9.11 to 3.3.1
+- 5dee65a: Updated dependencies:
+  - @graphql-codegen/cli@5.0.0
+- 2e29699: Updated Sentry package
+
+## 1.12.0
+
+### Minor Changes
+
+- 261e9d1: Added additional images attribute to the feed for media uploaded to the product.
+
+### Patch Changes
+
+- 23e71bc: Fix typo on button label
+- 261e9d1: Improved default resolution of the submitted images. Was: 500px, now it's 1024px.
+  Users can now configure the size in the app configuration.
+- Updated dependencies [e8660e8]
+- Updated dependencies [e8660e8]
+- Updated dependencies [e8660e8]
+- Updated dependencies [e8660e8]
+- Updated dependencies [e8660e8]
+- Updated dependencies [e8660e8]
+  - @saleor/apps-shared@1.9.0
+  - @saleor/apps-ui@1.2.0
+
+## 1.11.4
+
+### Patch Changes
+
+- 2a1385b: Plaintext EditorJS renderer has been moved to the shared package.
+- a81f061: Updated Macaw to pre-127
+- fcc37e7: Remove clsx package from the projects no longer using it.
+- Updated dependencies [2a1385b]
+- Updated dependencies [a81f061]
+- Updated dependencies [fcc37e7]
+  - @saleor/apps-shared@1.8.1
+  - @saleor/react-hook-form-macaw@0.2.5
+  - @saleor/apps-ui@1.1.8
+
+## 1.11.3
+
+### Patch Changes
+
+- 8b3d961: Updated Macaw UI to pre.118
+- Updated dependencies [8b3d961]
+- Updated dependencies [c50797e]
+  - @saleor/react-hook-form-macaw@0.2.4
+  - @saleor/apps-shared@1.8.0
+  - @saleor/apps-ui@1.1.7
+
+## 1.11.2
+
+### Patch Changes
+
+- 3002354: Added error logging for exceptions thrown at tRPC routes.
+
+## 1.11.1
+
+### Patch Changes
+
+- bb504d9: Fixed error on loading configuration created in the previous version of the app.
+- bb504d9: Fixed issue with saving changes in the title template form.
+- bb504d9: Improved error logging in the tRPC API.
+
+## 1.11.0
+
+### Minor Changes
+
+- 6a84b4b: Changed format of product URLs to Handlebars. Previous format can still be parsed, so this change does not affect existing configurations.
+
+  Old format: `http://example.com/{variantId}`
+  New format: `http://example.com/{{variant.id}}`
+
+- 6a84b4b: Added item title customization using Handlebars.
+- fc5e639: Feed format has been changed to leverage Product Group ID field:
+  - Product ID: feed items use SKU if available, product variant ID is used otherwise
+  - Product Group ID: product ID is used for all the items
+- 0b0297e: Updated pricing attributes according to the Google guidelines.
+
+  Was:
+
+  - Price: base or discounted price
+
+  Now:
+
+  - Price: always the base price. Attribute skipped if amount is equal to 0.
+  - Sale price: discounted price. Attribute skipped if value is the same as base price
+
+- aece073: Added configuration for choosing which product attributes should be used for generating Google Product Feed. Supported feed attributes: Brand, Color, Size, Material, Pattern.
+
+### Patch Changes
+
+- 261957f: Updated dependencies: vite, vitest, eslint, prettier, dotenv, turbo, syncpack, changesets, lint staged
+- Updated dependencies [261957f]
+  - @saleor/react-hook-form-macaw@0.2.3
+  - @saleor/apps-shared@1.7.6
+  - @saleor/apps-ui@1.1.6
+
+## 1.10.3
+
+### Patch Changes
+
+- 07999ea: Changed input type for region in the AWS credentials section. Region can be now selected from the list, instead of text input.
+- 43d7e47: Added validation for AWS credentials. If provided configuration for S3 Bucket is invalid, it won't be saved.
+
+## 1.10.2
+
+### Patch Changes
+
+- 2fab86b: Updated graphql package to 16.7.1 and @graphql-codegen related dependencies to the latest version.
+- aa6fec1: Updated Macaw UI to pre-106
+- Updated dependencies [aa6fec1]
+- Updated dependencies [aa6fec1]
+  - @saleor/react-hook-form-macaw@0.2.2
+  - @saleor/apps-shared@1.7.5
+  - @saleor/apps-ui@1.1.5
+
+## 1.10.1
+
+### Patch Changes
+
+- 70cb741: Update Zod to 3.21.4
+- e7c2d3a: Updated and ESLint dependencies
+- 3c6cd4c: Updated the @saleor/app-sdk package to version 0.41.1.
+- 6210447: Updated tRPC packages to 10.34.0
+- 6210447: Updated @tanstack/react-query 4.29.19
+- Updated dependencies [70cb741]
+- Updated dependencies [e7c2d3a]
+- Updated dependencies [3c6cd4c]
+- Updated dependencies [6210447]
+  - @saleor/react-hook-form-macaw@0.2.1
+  - @saleor/apps-shared@1.7.4
+  - @saleor/apps-ui@1.1.4
+
+## 1.10.0
+
+### Minor Changes
+
+- a1f083c: Filled "about" field in App Manifest. Dashboard will display it in app details page now.
+- 47102ba: Added additional ENV variables (see each app's .env.example), that can overwrite app base URL. This change allows easy apps development using Docker
+
+### Patch Changes
+
+- 2d77bca: Updated Next.js to 13.4.8
+- 6299e06: Update @saleor/app-sdk to 0.41.0
+- Updated dependencies [2d77bca]
+- Updated dependencies [6299e06]
+  - @saleor/apps-shared@1.7.3
+  - @saleor/apps-ui@1.1.3
+  - @saleor/react-hook-form-macaw@0.2.0
+
 ## 1.9.0
 
 ### Minor Changes

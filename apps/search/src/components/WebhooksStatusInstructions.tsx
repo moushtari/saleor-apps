@@ -1,10 +1,10 @@
-import { Text } from "@saleor/macaw-ui/next";
+import { Text } from "@saleor/macaw-ui";
 import { useWebhooksStatus } from "../lib/useWebhooksStatus";
 
 export const WebhooksStatusInstructions = () => {
   const { data: webhooksData } = useWebhooksStatus();
 
-  if (webhooksData && webhooksData.some((w) => !w.isActive)) {
+  if (webhooksData && webhooksData.webhooks.some((w) => !w.isActive)) {
     return (
       <>
         <Text as={"p"} marginBottom={1.5}>

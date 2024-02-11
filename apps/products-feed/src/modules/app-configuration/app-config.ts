@@ -1,4 +1,30 @@
+import { createLogger } from "@saleor/apps-shared";
 import { z } from "zod";
+
+const imageSizeFieldSchema = z.coerce.number().gte(256).default(1024);
+
+export const imageSizeInputSchema = z.object({
+  imageSize: imageSizeFieldSchema,
+});
+
+export type ImageSizeInput = z.infer<typeof imageSizeInputSchema>;
+
+const titleTemplateFieldSchema = z.string().default("{{variant.product.name}} - {{variant.name}}");
+
+export const titleTemplateInputSchema = z.object({
+  titleTemplate: titleTemplateFieldSchema,
+});
+
+export type TitleTemplateInput = z.infer<typeof titleTemplateInputSchema>;
+
+const attributeMappingSchema = z.object({
+  brandAttributeIds: z.array(z.string()).default([]),
+  colorAttributeIds: z.array(z.string()).default([]),
+  sizeAttributeIds: z.array(z.string()).default([]),
+  materialAttributeIds: z.array(z.string()).default([]),
+  patternAttributeIds: z.array(z.string()).default([]),
+  gtinAttributeIds: z.array(z.string()).default([]),
+});
 
 const s3ConfigSchema = z.object({
   bucketName: z.string().min(1),
@@ -14,6 +40,14 @@ const urlConfigurationSchema = z.object({
 
 const rootAppConfigSchema = z.object({
   s3: s3ConfigSchema.nullable(),
+  titleTemplate: titleTemplateFieldSchema
+    .optional()
+    .default(titleTemplateFieldSchema.parse(undefined)),
+  imageSize: imageSizeFieldSchema.optional().default(imageSizeFieldSchema.parse(undefined)),
+  attributeMapping: attributeMappingSchema
+    .nullable()
+    .optional()
+    .default(attributeMappingSchema.parse({})),
   channelConfig: z.record(z.object({ storefrontUrls: urlConfigurationSchema })),
 });
 
@@ -21,21 +55,32 @@ export const AppConfigSchema = {
   root: rootAppConfigSchema,
   s3Bucket: s3ConfigSchema,
   channelUrls: urlConfigurationSchema,
+  attributeMapping: attributeMappingSchema,
 };
 
 export type RootConfig = z.infer<typeof rootAppConfigSchema>;
 
 export type ChannelUrlsConfig = z.infer<typeof AppConfigSchema.channelUrls>;
 
+const logger = createLogger({ name: "AppConfig" });
+
 export class AppConfig {
   private rootData: RootConfig = {
     channelConfig: {},
     s3: null,
+    attributeMapping: attributeMappingSchema.parse({}),
+    titleTemplate: titleTemplateFieldSchema.parse(undefined),
+    imageSize: imageSizeFieldSchema.parse(undefined),
   };
 
   constructor(initialData?: RootConfig) {
     if (initialData) {
-      this.rootData = rootAppConfigSchema.parse(initialData);
+      try {
+        this.rootData = rootAppConfigSchema.parse(initialData);
+      } catch (e) {
+        logger.error(e, "Could not parse initial data");
+        throw new Error("Can't load the configuration");
+      }
     }
   }
 
@@ -57,9 +102,19 @@ export class AppConfig {
 
       return this;
     } catch (e) {
-      console.error(e);
-
+      logger.info(e, "Invalid S3 config provided");
       throw new Error("Invalid S3 config provided");
+    }
+  }
+
+  setAttributeMapping(attributeMapping: z.infer<typeof attributeMappingSchema>) {
+    try {
+      this.rootData.attributeMapping = attributeMappingSchema.parse(attributeMapping);
+
+      return this;
+    } catch (e) {
+      logger.info(e, "Invalid mapping config provided");
+      throw new Error("Invalid mapping config provided");
     }
   }
 
@@ -70,10 +125,11 @@ export class AppConfig {
       this.rootData.channelConfig[channelSlug] = {
         storefrontUrls: parsedConfig,
       };
-    } catch (e) {
-      console.error(e);
 
-      throw new Error("Invalid payload");
+      return this;
+    } catch (e) {
+      logger.info(e, "Invalid channels config provided");
+      throw new Error("Invalid channels config provided");
     }
   }
 
@@ -87,5 +143,29 @@ export class AppConfig {
 
   getS3Config() {
     return this.rootData.s3;
+  }
+
+  getAttributeMapping() {
+    return this.rootData.attributeMapping;
+  }
+
+  setTitleTemplate(titleTemplate: z.infer<typeof titleTemplateFieldSchema>) {
+    this.rootData.titleTemplate = titleTemplate;
+
+    return this;
+  }
+
+  getTitleTemplate() {
+    return this.rootData.titleTemplate;
+  }
+
+  setImageSize(imageSize: z.infer<typeof imageSizeFieldSchema>) {
+    this.rootData.imageSize = imageSize;
+
+    return this;
+  }
+
+  getImageSize() {
+    return this.rootData.imageSize;
   }
 }

@@ -1,4 +1,7 @@
 fragment ProductData on Product {
+  variants {
+    id
+  }
   id
   name
   description
@@ -21,10 +24,52 @@ fragment ProductData on Product {
   thumbnail {
     url
   }
+  media {
+    url
+    type
+  }
   attributes {
     ...ProductAttributesData
   }
   channelListings {
+    pricing {
+      priceRangeUndiscounted {
+        start {
+          gross {
+            amount
+          }
+          net {
+            amount
+          }
+        }
+        stop {
+          gross {
+            amount
+          }
+          net {
+            amount
+          }
+        }
+      }
+      priceRange {
+        start {
+          gross {
+            amount
+          }
+          net {
+            amount
+          }
+        }
+        stop {
+          gross {
+            amount
+          }
+          net {
+            amount
+          }
+        }
+      }
+    }
     id
     visibleInListings
     channel {

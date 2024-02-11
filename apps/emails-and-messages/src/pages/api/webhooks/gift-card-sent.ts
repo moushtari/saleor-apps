@@ -1,9 +1,11 @@
 import { NextWebhookApiHandler, SaleorAsyncWebhook } from "@saleor/app-sdk/handlers/next";
 import { gql } from "urql";
 import { saleorApp } from "../../../saleor-app";
-import { createLogger, createGraphQLClient } from "@saleor/apps-shared";
+import { createGraphQLClient } from "@saleor/apps-shared";
 import { GiftCardSentWebhookPayloadFragment } from "../../../../generated/graphql";
 import { sendEventMessages } from "../../../modules/event-handlers/send-event-messages";
+import { withOtel } from "@saleor/apps-otel";
+import { createLogger } from "../../../logger";
 
 const GiftCardSentWebhookPayload = gql`
   fragment GiftCardSentWebhookPayload on GiftCardSent {
@@ -15,6 +17,14 @@ const GiftCardSentWebhookPayload = gql`
       created
       usedByEmail
       isActive
+      metadata {
+        key
+        value
+      }
+      privateMetadata {
+        key
+        value
+      }
       initialBalance {
         currency
         amount
@@ -57,15 +67,13 @@ export const giftCardSentWebhook = new SaleorAsyncWebhook<GiftCardSentWebhookPay
   subscriptionQueryAst: GiftCardSentGraphqlSubscription,
 });
 
+const logger = createLogger(giftCardSentWebhook.webhookPath);
+
 const handler: NextWebhookApiHandler<GiftCardSentWebhookPayloadFragment> = async (
   req,
   res,
-  context
+  context,
 ) => {
-  const logger = createLogger({
-    webhook: giftCardSentWebhook.name,
-  });
-
   logger.debug("Webhook received");
 
   const { payload, authData } = context;
@@ -109,7 +117,7 @@ const handler: NextWebhookApiHandler<GiftCardSentWebhookPayloadFragment> = async
   return res.status(200).json({ message: "The event has been handled" });
 };
 
-export default giftCardSentWebhook.createHandler(handler);
+export default withOtel(giftCardSentWebhook.createHandler(handler), "/api/webhooks/gift-card-sent");
 
 export const config = {
   api: {

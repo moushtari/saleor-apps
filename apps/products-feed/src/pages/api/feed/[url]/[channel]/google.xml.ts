@@ -6,9 +6,6 @@ import { fetchProductData } from "../../../../../modules/google-feed/fetch-produ
 import { GoogleFeedSettingsFetcher } from "../../../../../modules/google-feed/get-google-feed-settings";
 import { generateGoogleXmlFeed } from "../../../../../modules/google-feed/generate-google-xml-feed";
 import { fetchShopData } from "../../../../../modules/google-feed/fetch-shop-data";
-import { CacheConfigurator } from "../../../../../modules/metadata-cache/cache-configurator";
-import { createSettingsManager } from "../../../../../lib/metadata-manager";
-import { GraphqlClientFactory } from "../../../../../lib/create-graphq-client";
 import { uploadFile } from "../../../../../modules/file-storage/s3/upload-file";
 import { createS3ClientFromConfiguration } from "../../../../../modules/file-storage/s3/create-s3-client-from-configuration";
 import { getFileDetails } from "../../../../../modules/file-storage/s3/get-file-details";
@@ -80,6 +77,9 @@ export const handler = async (req: NextApiRequest, res: NextApiResponse) => {
   let storefrontUrl: string;
   let productStorefrontUrl: string;
   let bucketConfiguration: RootConfig["s3"] | undefined;
+  let attributeMapping: RootConfig["attributeMapping"] | undefined;
+  let titleTemplate: RootConfig["titleTemplate"] | undefined;
+  let imageSize: RootConfig["imageSize"] | undefined;
 
   try {
     const settingsFetcher = GoogleFeedSettingsFetcher.createFromAuthData(authData);
@@ -88,6 +88,9 @@ export const handler = async (req: NextApiRequest, res: NextApiResponse) => {
     storefrontUrl = settings.storefrontUrl;
     productStorefrontUrl = settings.productStorefrontUrl;
     bucketConfiguration = settings.s3BucketConfiguration;
+    attributeMapping = settings.attributeMapping;
+    titleTemplate = settings.titleTemplate;
+    imageSize = settings.imageSize;
   } catch (error) {
     logger.warn("The application has not been configured");
 
@@ -151,23 +154,10 @@ export const handler = async (req: NextApiRequest, res: NextApiResponse) => {
 
   logger.debug("Generating a new feed");
 
-  const cacheClient = GraphqlClientFactory.fromAuthData(authData);
-
-  if (!cacheClient) {
-    logger.error("Can't create the gql client");
-    return res.status(500).end();
-  }
-
-  // get cached cursors
-  const cache = new CacheConfigurator(createSettingsManager(cacheClient), authData.saleorApiUrl);
-
-  const cursors = await cache.get({ channel });
-
-  // TODO: instead of separate variants, use group id https://support.google.com/merchants/answer/6324507?hl=en
   let productVariants: GoogleFeedProductVariantFragment[] = [];
 
   try {
-    productVariants = await fetchProductData({ client, channel, cursors });
+    productVariants = await fetchProductData({ client, channel, imageSize });
   } catch (error) {
     logger.error(error);
     return res.status(400).end();
@@ -181,6 +171,8 @@ export const handler = async (req: NextApiRequest, res: NextApiResponse) => {
     storefrontUrl,
     productStorefrontUrl,
     productVariants,
+    attributeMapping,
+    titleTemplate,
   });
 
   logger.debug("Feed generated. Returning formatted XML");

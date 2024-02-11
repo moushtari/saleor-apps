@@ -1,6 +1,6 @@
 import { SendgridConfiguration } from "../configuration/sendgrid-config-schema";
 import { BoxWithBorder } from "../../../components/box-with-border";
-import { Box, Button, Text } from "@saleor/macaw-ui/next";
+import { Box, Button, Text } from "@saleor/macaw-ui";
 import { defaultPadding } from "../../../components/ui-defaults";
 import { useDashboardNotification } from "@saleor/apps-shared";
 import { trpcClient } from "../../trpc/trpc-client";
@@ -62,7 +62,7 @@ export const ApiConnectionSection = ({ configuration }: ApiConnectionSectionProp
               label="API Key"
               name="apiKey"
               control={control}
-              helperText="The API key can be generated in your Sendgrid dashboard"
+              helperText="The API key can be generated in your SendGrid dashboard"
             />
 
             <label>

@@ -1,6 +1,6 @@
 import { SendgridConfiguration } from "../configuration/sendgrid-config-schema";
 import { BoxWithBorder } from "../../../components/box-with-border";
-import { Box, Button, Text, Tooltip } from "@saleor/macaw-ui/next";
+import { Box, Button, Text, Tooltip } from "@saleor/macaw-ui";
 import { defaultPadding } from "../../../components/ui-defaults";
 import { useDashboardNotification } from "@saleor/apps-shared";
 import { trpcClient } from "../../trpc/trpc-client";
@@ -19,6 +19,8 @@ import { Select } from "@saleor/react-hook-form-macaw";
 import { TextLink } from "@saleor/apps-ui";
 import { messageEventTypesLabels } from "../../event-handlers/message-event-types";
 import { Table } from "../../../components/table";
+import { getEventFormStatus } from "../../../lib/get-event-form-status";
+import { ManagePermissionsTextLink } from "../../../components/manage-permissions-text-link";
 
 interface SendgridEventsSectionProps {
   configuration: SendgridConfiguration;
@@ -28,13 +30,20 @@ export const SendgridEventsSection = ({ configuration }: SendgridEventsSectionPr
   const { notifySuccess, notifyError } = useDashboardNotification();
 
   const { data: featureFlags } = trpcClient.app.featureFlags.useQuery();
+  const { data: appPermissions } = trpcClient.app.appPermissions.useQuery();
 
   // Sort events by displayed label
   const eventsSorted = configuration.events.sort((a, b) =>
     messageEventTypesLabels[a.eventType].localeCompare(messageEventTypesLabels[b.eventType])
   );
 
-  const { control, register, handleSubmit, setError } = useForm<SendgridUpdateEventArray>({
+  const {
+    control,
+    register,
+    handleSubmit,
+    setError,
+    formState: { errors },
+  } = useForm<SendgridUpdateEventArray>({
     defaultValues: {
       configurationId: configuration.id,
       events: eventsSorted,
@@ -66,7 +75,7 @@ export const SendgridEventsSection = ({ configuration }: SendgridEventsSectionPr
       title="Events"
       description={
         <Text as="p">
-          Choose which Saleor events should send emails via Sendgrid. You can create and modify your
+          Choose which Saleor events should send emails via SendGrid. You can create and modify your
           templates in the{" "}
           <TextLink href="https://mc.sendgrid.com/dynamic-templates" newTab={true}>
             Sendgrid dashboard
@@ -92,8 +101,12 @@ export const SendgridEventsSection = ({ configuration }: SendgridEventsSectionPr
               </Table.Header>
               <Table.Body>
                 {eventsSorted.map((event, index) => {
-                  const isUnsupported =
-                    !featureFlags?.giftCardSentEvent && event.eventType === "GIFT_CARD_SENT";
+                  const { isDisabled, requiredSaleorVersion, missingPermission } =
+                    getEventFormStatus({
+                      appPermissions,
+                      featureFlags: featureFlags,
+                      eventType: event.eventType,
+                    });
 
                   return (
                     <Table.Row key={event.eventType}>
@@ -103,14 +116,22 @@ export const SendgridEventsSection = ({ configuration }: SendgridEventsSectionPr
                             <input
                               type="checkbox"
                               {...register(`events.${index}.active`)}
-                              disabled={isUnsupported}
+                              disabled={isDisabled}
                             />
                           </Tooltip.Trigger>
-                          {isUnsupported && (
+                          {requiredSaleorVersion ? (
                             <Tooltip.Content side="left">
-                              Event is available in Saleor version 3.13 and above only.
+                              The feature requires Saleor version {requiredSaleorVersion}. Update
+                              the instance to enable.
                               <Tooltip.Arrow />
                             </Tooltip.Content>
+                          ) : (
+                            missingPermission && (
+                              <Tooltip.Content side="left">
+                                <ManagePermissionsTextLink missingPermission={missingPermission} />
+                                <Tooltip.Arrow />
+                              </Tooltip.Content>
+                            )
                           )}
                         </Tooltip>
                       </Table.Cell>
@@ -122,7 +143,7 @@ export const SendgridEventsSection = ({ configuration }: SendgridEventsSectionPr
                           control={control}
                           name={`events.${index}.template`}
                           options={templateChoices}
-                          disabled={isUnsupported}
+                          disabled={isDisabled}
                         />
                       </Table.Cell>
                     </Table.Row>
@@ -132,6 +153,7 @@ export const SendgridEventsSection = ({ configuration }: SendgridEventsSectionPr
             </Table.Container>
           </Box>
           <BoxFooter>
+            {errors.events && <Text color={"iconCriticalDefault"}>{errors.events.message}</Text>}
             <Button type="submit">Save provider</Button>
           </BoxFooter>
         </BoxWithBorder>

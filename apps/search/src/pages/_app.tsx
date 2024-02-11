@@ -1,20 +1,19 @@
 import "../styles/globals.css";
-import "@saleor/macaw-ui/next/style";
+import "@saleor/macaw-ui/style";
 import { AppBridge, AppBridgeProvider } from "@saleor/app-sdk/app-bridge";
-import React, { useEffect } from "react";
+import React from "react";
 import { AppProps } from "next/app";
-import { GraphQLProvider } from "../providers/GraphQLProvider";
-import { QueryClient, QueryClientProvider } from "react-query";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { RoutePropagator } from "@saleor/app-sdk/app-bridge/next";
-import { ThemeSynchronizer } from "../lib/theme-synchronizer";
-import { Box, ThemeProvider } from "@saleor/macaw-ui/next";
-import { NoSSRWrapper } from "@saleor/apps-shared";
+import { Box, ThemeProvider } from "@saleor/macaw-ui";
+import { GraphQLProvider, NoSSRWrapper, ThemeSynchronizer } from "@saleor/apps-shared";
+import { trpcClient } from "../modules/trpc/trpc-client";
 
 /**
  * Ensure instance is a singleton.
  * TODO: This is React 18 issue, consider hiding this workaround inside app-sdk
  */
-const appBridgeInstance = typeof window !== "undefined" ? new AppBridge() : undefined;
+export const appBridgeInstance = typeof window !== "undefined" ? new AppBridge() : undefined;
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -44,4 +43,4 @@ function NextApp({ Component, pageProps }: AppProps) {
   );
 }
 
-export default NextApp;
+export default trpcClient.withTRPC(NextApp);

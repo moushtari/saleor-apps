@@ -2,7 +2,17 @@ fragment GoogleFeedProductVariant on ProductVariant {
   id
   name
   sku
+  weight {
+    unit
+    value
+  }
   pricing {
+    priceUndiscounted{
+      gross {
+        currency
+        amount
+      }
+    }
     price {
       gross {
         currency
@@ -11,13 +21,49 @@ fragment GoogleFeedProductVariant on ProductVariant {
     }
   }
   quantityAvailable
+  attributes {
+    attribute {
+      id
+    }
+    values {
+      value
+      name
+    }
+  }
   product {
     id
     name
     slug
     description
     seoDescription
-    thumbnail {
+    productType {
+      isShippingRequired
+    }
+    media{
+      id
+      alt
+      url(size: $imageSize)
+      type
+    }
+    variants{
+      id
+      media{
+        id
+        alt
+        url(size: $imageSize)
+        type
+      }
+    }
+    attributes{
+      attribute{
+        id
+      }
+      values{
+        value
+        name
+      }
+    }
+    thumbnail(size: $imageSize) {
       url
     }
     category {

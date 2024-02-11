@@ -1,18 +1,28 @@
 import { NextWebhookApiHandler, SaleorAsyncWebhook } from "@saleor/app-sdk/handlers/next";
 import { gql } from "urql";
 import { saleorApp } from "../../../saleor-app";
-import { createLogger, createGraphQLClient } from "@saleor/apps-shared";
+import { createGraphQLClient } from "@saleor/apps-shared";
 import {
   InvoiceSentWebhookPayloadFragment,
   OrderDetailsFragmentDoc,
 } from "../../../../generated/graphql";
 import { sendEventMessages } from "../../../modules/event-handlers/send-event-messages";
+import { withOtel } from "@saleor/apps-otel";
+import { createLogger } from "../../../logger";
 
 const InvoiceSentWebhookPayload = gql`
   ${OrderDetailsFragmentDoc}
   fragment InvoiceSentWebhookPayload on InvoiceSent {
     invoice {
       id
+      metadata {
+        key
+        value
+      }
+      privateMetadata {
+        key
+        value
+      }
       message
       externalUrl
       url
@@ -43,15 +53,13 @@ export const invoiceSentWebhook = new SaleorAsyncWebhook<InvoiceSentWebhookPaylo
   subscriptionQueryAst: InvoiceSentGraphqlSubscription,
 });
 
+const logger = createLogger(invoiceSentWebhook.name);
+
 const handler: NextWebhookApiHandler<InvoiceSentWebhookPayloadFragment> = async (
   req,
   res,
-  context
+  context,
 ) => {
-  const logger = createLogger({
-    webhook: invoiceSentWebhook.name,
-  });
-
   logger.debug("Webhook received");
 
   const { payload, authData } = context;
@@ -89,7 +97,7 @@ const handler: NextWebhookApiHandler<InvoiceSentWebhookPayloadFragment> = async 
   return res.status(200).json({ message: "The event has been handled" });
 };
 
-export default invoiceSentWebhook.createHandler(handler);
+export default withOtel(invoiceSentWebhook.createHandler(handler), "api/webhooks/invoice-sent");
 
 export const config = {
   api: {

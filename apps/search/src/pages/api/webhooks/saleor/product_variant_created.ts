@@ -1,15 +1,10 @@
-import { NextWebhookApiHandler, SaleorAsyncWebhook } from "@saleor/app-sdk/handlers/next";
-import {
-  ProductVariantCreated,
-  ProductVariantCreatedDocument,
-} from "../../../../../generated/graphql";
-import { saleorApp } from "../../../../../saleor-app";
-import { AlgoliaSearchProvider } from "../../../../lib/algolia/algoliaSearchProvider";
-import { getAlgoliaConfiguration } from "../../../../lib/algolia/getAlgoliaConfiguration";
-import { createDebug } from "../../../../lib/debug";
-import { createLogger } from "../../../../lib/logger";
+import { NextWebhookApiHandler } from "@saleor/app-sdk/handlers/next";
+import { ProductVariantCreated } from "../../../../../generated/graphql";
 import { WebhookActivityTogglerService } from "../../../../domain/WebhookActivityToggler.service";
-import { createGraphQLClient } from "@saleor/apps-shared";
+import { createLogger } from "../../../../lib/logger";
+import { webhookProductVariantCreated } from "../../../../webhooks/definitions/product-variant-created";
+import { createWebhookContext } from "../../../../webhooks/webhook-context";
+import { withOtel } from "@saleor/apps-otel";
 
 export const config = {
   api: {
@@ -17,71 +12,53 @@ export const config = {
   },
 };
 
-export const webhookProductVariantCreated = new SaleorAsyncWebhook<ProductVariantCreated>({
-  webhookPath: "api/webhooks/saleor/product_variant_created",
-  event: "PRODUCT_VARIANT_CREATED",
-  apl: saleorApp.apl,
-  query: ProductVariantCreatedDocument,
-  /**
-   * Webhook is disabled by default. Will be enabled by the app when configuration succeeds
-   */
-  isActive: false,
-});
-
-const logger = createLogger({
-  service: "webhookProductVariantCreatedWebhookHandler",
-});
+const logger = createLogger("webhookProductVariantCreatedWebhookHandler");
 
 export const handler: NextWebhookApiHandler<ProductVariantCreated> = async (req, res, context) => {
   const { event, authData } = context;
 
   logger.debug(
-    `New event ${event} (${context.payload?.__typename}) from the ${authData.domain} domain has been received!`
+    `New event ${event} (${context.payload?.__typename}) from the ${authData.domain} domain has been received!`,
   );
-
-  const { settings, errors } = await getAlgoliaConfiguration({ authData });
-
-  if (errors?.length || !settings) {
-    logger.warn("Aborting due to lack of settings");
-    logger.debug(errors);
-    return res.status(400).json({
-      message: errors[0].message,
-    });
-  }
-
-  const searchProvider = new AlgoliaSearchProvider({
-    appId: settings.appId,
-    apiKey: settings.secretKey,
-    indexNamePrefix: settings.indexNamePrefix,
-  });
 
   const { productVariant } = context.payload;
 
-  if (productVariant) {
+  if (!productVariant) {
+    logger.error("Webhook did not received expected product data in the payload.");
+    return res.status(200).end();
+  }
+
+  try {
+    const { algoliaClient, apiClient } = await createWebhookContext({ authData });
+
     try {
-      await searchProvider.createProductVariant(productVariant);
+      await algoliaClient.createProductVariant(productVariant);
+
+      res.status(200).end();
+      return;
     } catch (e) {
       logger.info(e, "Algolia createProductVariant failed. Webhooks will be disabled");
 
-      const webhooksToggler = new WebhookActivityTogglerService(
-        authData.appId,
-        createGraphQLClient({ saleorApiUrl: authData.saleorApiUrl, token: authData.token })
-      );
+      const webhooksToggler = new WebhookActivityTogglerService(authData.appId, apiClient);
 
       logger.trace("Will disable webhooks");
 
       await webhooksToggler.disableOwnWebhooks(
-        context.payload.recipient?.webhooks?.map((w) => w.id)
+        context.payload.recipient?.webhooks?.map((w) => w.id),
       );
 
       logger.trace("Webhooks disabling operation finished");
 
       return res.status(500).send("Operation failed, webhooks are disabled");
     }
+  } catch (e) {
+    return res.status(400).json({
+      message: (e as Error).message,
+    });
   }
-
-  res.status(200).end();
-  return;
 };
 
-export default webhookProductVariantCreated.createHandler(handler);
+export default withOtel(
+  webhookProductVariantCreated.createHandler(handler),
+  "api/webhooks/saleor/product_variant_created",
+);

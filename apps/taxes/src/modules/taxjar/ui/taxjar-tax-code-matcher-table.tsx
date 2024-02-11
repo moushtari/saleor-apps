@@ -3,7 +3,7 @@ import React from "react";
 import { trpcClient } from "../../trpc/trpc-client";
 import { Table } from "../../ui/table";
 import { Select } from "../../ui/_select";
-import { Box, Text } from "@saleor/macaw-ui/next";
+import { Box, Text } from "@saleor/macaw-ui";
 import { AppCard } from "../../ui/app-card";
 import { useRouter } from "next/router";
 
@@ -81,7 +81,7 @@ const SelectTaxCode = ({ taxClassId }: { taxClassId: string }) => {
 
   return (
     <Select
-      value={value ?? ""}
+      value={value ?? null}
       disabled={isLoading}
       onChange={(value) => changeValue(String(value))}
       options={[

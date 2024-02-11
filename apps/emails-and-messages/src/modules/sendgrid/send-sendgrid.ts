@@ -1,7 +1,7 @@
-import { createLogger } from "@saleor/apps-shared";
 import { SendgridConfiguration } from "./configuration/sendgrid-config-schema";
 import { MailService } from "@sendgrid/mail";
 import { MessageEventTypes } from "../event-handlers/message-event-types";
+import { createLogger } from "../../logger";
 
 interface SendSendgridArgs {
   recipientEmail: string;
@@ -23,47 +23,29 @@ export const sendSendgrid = async ({
   event,
   sendgridConfiguration,
 }: SendSendgridArgs) => {
-  const logger = createLogger({
-    fn: "sendSendgrid",
+  const logger = createLogger("sendSendgrid", {
+    name: "sendSendgrid",
     event,
   });
 
   if (!sendgridConfiguration.senderEmail) {
     logger.debug("Sender email has not been specified, skipping");
-    return {
-      errors: [
-        {
-          message: "Sender email has not been set up",
-        },
-      ],
-    };
+    return;
   }
 
   const eventSettings = sendgridConfiguration.events.find((e) => e.eventType === event);
 
   if (!eventSettings) {
     logger.debug("No active settings for this event, skipping");
-    return {
-      errors: [
-        {
-          message: "No active settings for this event",
-        },
-      ],
-    };
+    return;
   }
 
   if (!eventSettings.active) {
     logger.debug("Event settings are not active, skipping");
-    return {
-      errors: [
-        {
-          message: "Event settings are not active",
-        },
-      ],
-    };
+    return;
   }
 
-  logger.debug("Sending an email using Sendgrid");
+  logger.debug("Sending an email using SendGrid");
 
   const { template } = eventSettings;
 
@@ -95,7 +77,7 @@ export const sendSendgrid = async ({
     });
     logger.debug("Email has been send");
   } catch (error) {
-    logger.error("The Sendgrid API returned an error");
+    logger.error("The SendGrid API returned an error");
     logger.error(error);
     if (error instanceof Error) {
       return { errors: [{ message: error.message }] };

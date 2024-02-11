@@ -1,9 +1,7 @@
 import Handlebars from "handlebars";
-import { createLogger } from "@saleor/apps-shared";
+import { createLogger } from "../../logger";
 
-const logger = createLogger({
-  fn: "compileHandlebarsTemplate",
-});
+const logger = createLogger("compileHandlebarsTemplate");
 
 export const compileHandlebarsTemplate = (template: string, variables: any) => {
   logger.debug("Compiling handlebars template");

@@ -95,8 +95,11 @@ const taxIncludedTaxBase: TaxBase = {
     },
   ],
   sourceObject: {
+    avataxEntityCode: null,
+    __typename: "Checkout",
     user: {
-      id: "VXNlcjoyMDg0NTEwNDEw",
+      id: "123",
+      email: "demo@saleor.io",
     },
   },
 };
@@ -148,6 +151,7 @@ const taxExcludedTaxBase: TaxBase = {
       sourceLine: {
         __typename: "OrderLine",
         id: "T3JkZXJMaW5lOjUxZDc2ZDY1LTFhYTgtNGEzMi1hNWJhLTJkZDMzNjVhZDhlZQ==",
+
         orderProductVariant: {
           id: "UHJvZHVjdFZhcmlhbnQ6MzQ5",
           product: {
@@ -170,6 +174,7 @@ const taxExcludedTaxBase: TaxBase = {
       sourceLine: {
         __typename: "OrderLine",
         id: "T3JkZXJMaW5lOjlhMGJjZDhmLWFiMGQtNDJhOC04NTBhLTEyYjQ2YjJiNGIyZg==",
+
         orderProductVariant: {
           id: "UHJvZHVjdFZhcmlhbnQ6MzQw",
           product: {
@@ -190,8 +195,11 @@ const taxExcludedTaxBase: TaxBase = {
     },
   ],
   sourceObject: {
+    avataxEntityCode: null,
+    __typename: "Checkout",
     user: {
-      id: "VXNlcjoyMDg0NTEwNDEw",
+      id: "123",
+      email: "demo@saleor.io",
     },
   },
 };

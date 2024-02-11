@@ -1,7 +1,7 @@
 import TaxJar from "taxjar";
 import { AddressParams, Config, CreateOrderParams, TaxParams } from "taxjar/dist/util/types";
-import { createLogger, Logger } from "../../lib/logger";
 import { TaxJarConfig } from "./taxjar-connection-schema";
+import { createLogger } from "../../logger";
 
 const createTaxJarSettings = (config: TaxJarConfig): Config => {
   const settings: Config = {
@@ -26,10 +26,9 @@ export type ValidateAddressArgs = {
 
 export class TaxJarClient {
   private client: TaxJar;
-  private logger: Logger;
+  private logger = createLogger("TaxJarClient");
 
   constructor(providerConfig: TaxJarConfig) {
-    this.logger = createLogger({ name: "TaxJarClient" });
     const settings = createTaxJarSettings(providerConfig);
     const taxJarClient = new TaxJar(settings);
 
@@ -47,7 +46,7 @@ export class TaxJarClient {
   }
 
   /**
-   * In the past, we've had some problems with TaxJar validateAddress. It looks like it works now, but we should keep an eye on it.
+   * In the past, we've had some problems with TaxJar validateAddress. It looks like only works on production (live token, not sandbox token).
    * @see https://github.com/taxjar/taxjar-node/issues/70
    */
   async validateAddress({ params }: ValidateAddressArgs) {

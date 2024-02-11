@@ -2,27 +2,28 @@ import { describe, it, expect } from "vitest";
 import { productToProxy } from "./product-to-proxy";
 
 describe("productToProxy", () => {
-  it("Falls back product ID, if product SKU doesnt exist", () => {
+  it("Falls back product ID, if product SKU doesn't exist", () => {
     const result = productToProxy({
       slug: "slug",
       availability: "in_stock",
       category: "1",
       condition: "new",
-      id: "id",
-      name: "Name",
+      id: "product-id",
+      title: "title",
       variantId: "variant-id",
+      additionalImageLinks: [],
     });
 
     expect(result.item).toEqual(
       expect.arrayContaining([
         {
-          "g:id": expect.arrayContaining([{ "#text": "id" }]),
+          "g:id": expect.arrayContaining([{ "#text": "variant-id" }]),
         },
-      ])
+      ]),
     );
   });
 
-  it('Falls back g:condition to "new" if product condition doesnt exist', () => {
+  it('Falls back g:condition to "new" if product condition doesn\'t exist', () => {
     const result = productToProxy({
       slug: "slug",
       availability: "in_stock",
@@ -31,9 +32,10 @@ describe("productToProxy", () => {
        * Missing condition field:
        * condition: "new",
        */
-      id: "id",
-      name: "Name",
+      id: "product-id",
+      title: "title",
       variantId: "variant-id",
+      additionalImageLinks: [],
     });
 
     expect(result.item).toEqual(
@@ -41,7 +43,7 @@ describe("productToProxy", () => {
         {
           "g:condition": expect.arrayContaining([{ "#text": "new" }]),
         },
-      ])
+      ]),
     );
   });
 
@@ -51,10 +53,11 @@ describe("productToProxy", () => {
       availability: "in_stock",
       category: "1",
       condition: "new",
-      id: "id",
-      name: "Name",
+      id: "product-id",
+      title: "title",
       variantId: "variant-id",
       description: "Product description",
+      additionalImageLinks: [],
     });
 
     expect(result.item).toEqual(
@@ -62,7 +65,7 @@ describe("productToProxy", () => {
         {
           "g:description": expect.arrayContaining([{ "#text": "Product description" }]),
         },
-      ])
+      ]),
     );
   });
 
@@ -73,9 +76,10 @@ describe("productToProxy", () => {
       category: "1",
       condition: "new",
       googleProductCategory: "1",
-      id: "id",
-      name: "Name",
+      id: "product-id",
+      title: "title",
       variantId: "variant-id",
+      additionalImageLinks: [],
     });
 
     expect(result.item).toEqual(
@@ -83,21 +87,22 @@ describe("productToProxy", () => {
         {
           "g:google_product_category": expect.arrayContaining([{ "#text": "1" }]),
         },
-      ])
+      ]),
     );
   });
 
-  it("Adds link section with filled product url template", () => {
+  it("Adds link section, when url is provided", () => {
     const result = productToProxy({
       slug: "slug",
       availability: "in_stock",
       category: "1",
       condition: "new",
       googleProductCategory: "1",
-      id: "id",
-      name: "Name",
+      id: "product-id",
+      title: "title",
       variantId: "variant-id",
-      storefrontUrlTemplate: "https://example.com/p/{productSlug}/{productId}/{variantId}",
+      link: "https://example.com/p/product-id",
+      additionalImageLinks: [],
     });
 
     expect(result.item).toEqual(
@@ -105,11 +110,11 @@ describe("productToProxy", () => {
         {
           link: expect.arrayContaining([
             {
-              "#text": "https://example.com/p/slug/id/variant-id",
+              "#text": "https://example.com/p/product-id",
             },
           ]),
         },
-      ])
+      ]),
     );
   });
 
@@ -120,10 +125,11 @@ describe("productToProxy", () => {
       category: "1",
       condition: "new",
       googleProductCategory: "1",
-      id: "id",
-      name: "Name",
+      id: "product-id",
+      title: "title",
       variantId: "variant-id",
       imageUrl: "https://image.example.com",
+      additionalImageLinks: [],
     });
 
     expect(result.item).toEqual(
@@ -131,7 +137,7 @@ describe("productToProxy", () => {
         {
           "g:image_link": expect.arrayContaining([{ "#text": "https://image.example.com" }]),
         },
-      ])
+      ]),
     );
   });
 
@@ -142,11 +148,12 @@ describe("productToProxy", () => {
       category: "1",
       condition: "new",
       googleProductCategory: "1",
-      id: "id",
-      name: "Name",
+      id: "product-id",
+      title: "title",
       variantId: "variant-id",
       imageUrl: "https://image.example.com",
       price: "50.00 USD",
+      additionalImageLinks: [],
     });
 
     expect(result.item).toEqual(
@@ -154,7 +161,7 @@ describe("productToProxy", () => {
         {
           "g:price": expect.arrayContaining([{ "#text": "50.00 USD" }]),
         },
-      ])
+      ]),
     );
   });
 });

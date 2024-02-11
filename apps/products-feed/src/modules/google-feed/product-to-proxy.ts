@@ -1,22 +1,25 @@
-import { fillUrlTemplate } from "../feed-url/fill-url-template";
 import { GoogleProxyItem, ProductEntry } from "./types";
 
-/**
- * TODO Test
- */
 export const productToProxy = (p: ProductEntry) => {
   const item: GoogleProxyItem[] = [
     {
       "g:id": [
         {
-          "#text": p.sku || p.id,
+          "#text": p.sku || p.variantId,
+        },
+      ],
+    },
+    {
+      "g:item_group_id": [
+        {
+          "#text": p.id,
         },
       ],
     },
     {
       title: [
         {
-          "#text": p.name,
+          "#text": p.title,
         },
       ],
     },
@@ -54,6 +57,16 @@ export const productToProxy = (p: ProductEntry) => {
     });
   }
 
+  if (p.weight) {
+    item.push({
+      "g:shipping_weight": [
+        {
+          "#text": p.weight,
+        },
+      ],
+    });
+  }
+
   /**
    * This field is optional and Google automatically match category if not has been provided
    *
@@ -70,16 +83,11 @@ export const productToProxy = (p: ProductEntry) => {
     });
   }
 
-  if (p.storefrontUrlTemplate?.length) {
+  if (p.link?.length) {
     item.push({
       link: [
         {
-          "#text": fillUrlTemplate({
-            urlTemplate: p.storefrontUrlTemplate,
-            productId: p.id,
-            productSlug: p.slug,
-            variantId: p.variantId,
-          }),
+          "#text": p.link,
         },
       ],
     });
@@ -95,6 +103,16 @@ export const productToProxy = (p: ProductEntry) => {
     });
   }
 
+  for (const additional_image of p.additionalImageLinks) {
+    item.push({
+      "g:additional_image_link": [
+        {
+          "#text": additional_image,
+        },
+      ],
+    });
+  }
+
   if (p.price?.length) {
     item.push({
       "g:price": [
@@ -104,6 +122,77 @@ export const productToProxy = (p: ProductEntry) => {
       ],
     });
   }
+
+  if (p.salePrice?.length) {
+    item.push({
+      "g:sale_price": [
+        {
+          "#text": p.salePrice,
+        },
+      ],
+    });
+  }
+
+  if (p.material) {
+    item.push({
+      "g:material": [
+        {
+          "#text": p.material,
+        },
+      ],
+    });
+  }
+
+  if (p.brand) {
+    item.push({
+      "g:brand": [
+        {
+          "#text": p.brand,
+        },
+      ],
+    });
+  }
+
+  if (p.color) {
+    item.push({
+      "g:color": [
+        {
+          "#text": p.color,
+        },
+      ],
+    });
+  }
+
+  if (p.size) {
+    item.push({
+      "g:size": [
+        {
+          "#text": p.size,
+        },
+      ],
+    });
+  }
+
+  if (p.pattern) {
+    item.push({
+      "g:pattern": [
+        {
+          "#text": p.pattern,
+        },
+      ],
+    });
+  }
+
+  if (p.gtin) {
+    item.push({
+      "g:gtin": [
+        {
+          "#text": p.gtin,
+        },
+      ],
+    });
+  }
+
   return {
     item,
   };

@@ -1,5 +1,5 @@
 import { Breadcrumbs } from "@saleor/apps-ui";
-import { Box } from "@saleor/macaw-ui/next";
+import { Box } from "@saleor/macaw-ui";
 
 interface BasicLayoutProps {
   children: React.ReactNode;
@@ -13,7 +13,9 @@ export const BasicLayout = ({ children, breadcrumbs, isLoading = false }: BasicL
       {breadcrumbs?.length && (
         <Breadcrumbs>
           {breadcrumbs.map((breadcrumb) => (
-            <Breadcrumbs.Item href={breadcrumb.href}>{breadcrumb.name}</Breadcrumbs.Item>
+            <Breadcrumbs.Item key={breadcrumb.name} href={breadcrumb.href}>
+              {breadcrumb.name}
+            </Breadcrumbs.Item>
           ))}
         </Breadcrumbs>
       )}

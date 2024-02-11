@@ -1,13 +1,14 @@
-import { Box, Text } from "@saleor/macaw-ui/next";
-import { CreateAvataxConfiguration } from "../../../modules/avatax/ui/create-avatax-configuration";
-import { AppColumns } from "../../../modules/ui/app-columns";
+import { Box, Text } from "@saleor/macaw-ui";
+import { Provider } from "jotai";
 import { AvataxInstructions } from "../../../modules/avatax/ui/avatax-instructions";
+import { CreateAvataxConfiguration } from "../../../modules/avatax/ui/create-avatax-configuration";
+import { AppPageLayout } from "../../../modules/ui/app-page-layout";
 
 const Header = () => {
   return (
     <Box>
       <Text as="p" variant="body">
-        Create new Avatax configuration
+        Create new AvaTax configuration
       </Text>
     </Box>
   );
@@ -15,12 +16,28 @@ const Header = () => {
 
 const NewAvataxPage = () => {
   return (
-    <main>
-      <AppColumns top={<Header />}>
-        <AvataxInstructions />
+    <AppPageLayout
+      breadcrumbs={[
+        {
+          href: "/configuration",
+          label: "Configuration",
+        },
+        {
+          href: "/providers",
+          label: "Providers",
+        },
+        {
+          href: "/providers/avatax",
+          label: "AvaTax",
+        },
+      ]}
+      top={<Header />}
+    >
+      <AvataxInstructions />
+      <Provider>
         <CreateAvataxConfiguration />
-      </AppColumns>
-    </main>
+      </Provider>
+    </AppPageLayout>
   );
 };
 

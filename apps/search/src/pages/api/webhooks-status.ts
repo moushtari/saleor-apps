@@ -1,6 +1,6 @@
 import { createProtectedHandler, NextProtectedApiHandler } from "@saleor/app-sdk/handlers/next";
 import { saleorApp } from "../../../saleor-app";
-import { FetchOwnWebhooksDocument } from "../../../generated/graphql";
+import { FetchOwnWebhooksDocument, OwnWebhookFragment } from "../../../generated/graphql";
 import { AlgoliaSearchProvider } from "../../lib/algolia/algoliaSearchProvider";
 import { createSettingsManager } from "../../lib/metadata";
 import {
@@ -12,19 +12,31 @@ import { SettingsManager } from "@saleor/app-sdk/settings-manager";
 import { SearchProvider } from "../../lib/searchProvider";
 import { createGraphQLClient } from "@saleor/apps-shared";
 import { Client } from "urql";
+import { isWebhookUpdateNeeded } from "../../lib/algolia/is-webhook-update-needed";
+import { AppConfigMetadataManager } from "../../modules/configuration/app-config-metadata-manager";
+import { withOtel } from "@saleor/apps-otel";
 
-const logger = createLogger({
-  service: "webhooksStatusHandler",
-});
+const logger = createLogger("webhooksStatusHandler");
 
 /**
  * Simple dependency injection - factory injects all services, in tests everything can be configured without mocks
  */
 type FactoryProps = {
-  settingsManagerFactory: (client: Client) => SettingsManager;
-  webhookActivityTogglerFactory: (appId: string, client: Client) => IWebhookActivityTogglerService;
+  settingsManagerFactory: (
+    client: Pick<Client, "query" | "mutation">,
+    appId: string,
+  ) => SettingsManager;
+  webhookActivityTogglerFactory: (
+    appId: string,
+    client: Pick<Client, "query" | "mutation">,
+  ) => IWebhookActivityTogglerService;
   algoliaSearchProviderFactory: (appId: string, apiKey: string) => Pick<SearchProvider, "ping">;
-  graphqlClientFactory: (saleorApiUrl: string, token: string) => Client;
+  graphqlClientFactory: (saleorApiUrl: string, token: string) => Pick<Client, "query" | "mutation">;
+};
+
+export type WebhooksStatusResponse = {
+  webhooks: OwnWebhookFragment[];
+  isUpdateNeeded: boolean;
 };
 
 export const webhooksStatusHandlerFactory =
@@ -33,32 +45,27 @@ export const webhooksStatusHandlerFactory =
     webhookActivityTogglerFactory,
     algoliaSearchProviderFactory,
     graphqlClientFactory,
-  }: FactoryProps): NextProtectedApiHandler =>
+  }: FactoryProps): NextProtectedApiHandler<WebhooksStatusResponse> =>
   async (req, res, { authData }) => {
     /**
      * Initialize services
      */
     const client = graphqlClientFactory(authData.saleorApiUrl, authData.token);
     const webhooksToggler = webhookActivityTogglerFactory(authData.appId, client);
-    const settingsManager = settingsManagerFactory(client);
+    const settingsManager = settingsManagerFactory(client, authData.appId);
 
-    const domain = new URL(authData.saleorApiUrl).host;
+    const configManager = new AppConfigMetadataManager(settingsManager);
 
-    const [secretKey, appId] = await Promise.all([
-      settingsManager.get("secretKey", domain),
-      settingsManager.get("appId", domain),
-    ]);
+    const config = (await configManager.get(authData.saleorApiUrl)).getConfig();
 
-    const settings = { secretKey, appId };
-
-    logger.debug(settings, "fetched settings");
+    logger.debug("fetched settings");
 
     /**
      * If settings are incomplete, disable webhooks
      *
      * TODO Extract config operations to domain/
      */
-    if (!settings.appId || !settings.secretKey) {
+    if (!config.appConfig) {
       logger.debug("Settings not set, will disable webhooks");
 
       await webhooksToggler.disableOwnWebhooks();
@@ -66,7 +73,10 @@ export const webhooksStatusHandlerFactory =
       /**
        * Otherwise, if settings are set, check in Algolia if tokens are valid
        */
-      const algoliaService = algoliaSearchProviderFactory(settings.appId, settings.secretKey);
+      const algoliaService = algoliaSearchProviderFactory(
+        config.appConfig.appId,
+        config.appConfig.secretKey,
+      );
 
       try {
         logger.debug("Settings set, will ping Algolia");
@@ -93,26 +103,36 @@ export const webhooksStatusHandlerFactory =
         return res.status(500).end();
       }
 
-      return res.status(200).json(webhooks);
+      const isUpdateNeeded = isWebhookUpdateNeeded({
+        existingWebhookNames: webhooks.map((w) => w.name),
+      });
+
+      return res.status(200).json({
+        webhooks,
+        isUpdateNeeded,
+      });
     } catch (e) {
       console.error(e);
       return res.status(500).end();
     }
   };
 
-export default createProtectedHandler(
-  webhooksStatusHandlerFactory({
-    settingsManagerFactory: createSettingsManager,
-    webhookActivityTogglerFactory: function (appId, client) {
-      return new WebhookActivityTogglerService(appId, client);
-    },
-    algoliaSearchProviderFactory(appId, apiKey) {
-      return new AlgoliaSearchProvider({ appId, apiKey });
-    },
-    graphqlClientFactory(saleorApiUrl: string, token: string) {
-      return createGraphQLClient({ saleorApiUrl, token });
-    },
-  }),
-  saleorApp.apl,
-  []
+export default withOtel(
+  createProtectedHandler(
+    webhooksStatusHandlerFactory({
+      settingsManagerFactory: createSettingsManager,
+      webhookActivityTogglerFactory: function (appId, client) {
+        return new WebhookActivityTogglerService(appId, client);
+      },
+      algoliaSearchProviderFactory(appId, apiKey) {
+        return new AlgoliaSearchProvider({ appId, apiKey, enabledKeys: [] });
+      },
+      graphqlClientFactory(saleorApiUrl: string, token: string) {
+        return createGraphQLClient({ saleorApiUrl, token });
+      },
+    }),
+    saleorApp.apl,
+    [],
+  ),
+  "api/webhooks-status",
 );

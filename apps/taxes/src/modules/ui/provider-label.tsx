@@ -1,4 +1,4 @@
-import { Box, Text } from "@saleor/macaw-ui/next";
+import { Box, Text } from "@saleor/macaw-ui";
 import Image from "next/image";
 import { ProviderName } from "../provider-connections/provider-connections";
 import { TaxJarIcon, AvataxIcon, StripeTaxIcon } from "../../assets";
@@ -11,7 +11,7 @@ const providerConfig = {
     icon: TaxJarIcon,
   },
   avatax: {
-    label: "Avatax",
+    label: "AvaTax",
     icon: AvataxIcon,
   },
   stripeTax: {

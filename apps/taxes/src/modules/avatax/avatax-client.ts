@@ -1,12 +1,13 @@
 import Avatax from "avatax";
-import { CreateTransactionModel } from "avatax/lib/models/CreateTransactionModel";
-import packageJson from "../../../package.json";
-import { createLogger, Logger } from "../../lib/logger";
-import { AvataxConfig } from "./avatax-connection-schema";
-import { CommitTransactionModel } from "avatax/lib/models/CommitTransactionModel";
 import { DocumentType } from "avatax/lib/enums/DocumentType";
+import { VoidReasonCode } from "avatax/lib/enums/VoidReasonCode";
 import { AddressLocationInfo as AvataxAddress } from "avatax/lib/models/AddressLocationInfo";
+import { CommitTransactionModel } from "avatax/lib/models/CommitTransactionModel";
+import { CreateTransactionModel } from "avatax/lib/models/CreateTransactionModel";
+import { LogOptions } from "avatax/lib/utils/logger";
+import packageJson from "../../../package.json";
 import { AvataxClientTaxCodeService } from "./avatax-client-tax-code.service";
+import { BaseAvataxConfig } from "./avatax-connection-schema";
 
 type AvataxSettings = {
   appName: string;
@@ -14,11 +15,7 @@ type AvataxSettings = {
   environment: "sandbox" | "production";
   machineName: string;
   timeout: number;
-  logOptions?: {
-    logEnabled: boolean;
-    logLevel: number;
-    logRequestAndResponseInfo: boolean;
-  };
+  logOptions?: LogOptions;
 };
 
 const defaultAvataxSettings: AvataxSettings = {
@@ -29,10 +26,10 @@ const defaultAvataxSettings: AvataxSettings = {
   timeout: 5000,
 };
 
-const createAvataxSettings = (config: AvataxConfig): AvataxSettings => {
+const createAvataxSettings = ({ isSandbox }: { isSandbox: boolean }): AvataxSettings => {
   const settings: AvataxSettings = {
     ...defaultAvataxSettings,
-    environment: config.isSandbox ? "sandbox" : "production",
+    environment: isSandbox ? "sandbox" : "production",
   };
 
   return settings;
@@ -53,33 +50,66 @@ export type ValidateAddressArgs = {
   address: AvataxAddress;
 };
 
+export type VoidTransactionArgs = {
+  transactionCode: string;
+  companyCode: string;
+};
+
 export class AvataxClient {
   private client: Avatax;
-  private logger: Logger;
 
-  constructor(config: AvataxConfig) {
-    this.logger = createLogger({ name: "AvataxClient" });
-    const settings = createAvataxSettings(config);
-    const avataxClient = new Avatax(settings).withSecurity(config.credentials);
+  constructor(baseConfig: BaseAvataxConfig) {
+    const settings = createAvataxSettings({ isSandbox: baseConfig.isSandbox });
+    const avataxClient = new Avatax(settings).withSecurity(baseConfig.credentials);
 
     this.client = avataxClient;
   }
 
   async createTransaction({ model }: CreateTransactionArgs) {
-    return this.client.createTransaction({ model });
+    /*
+     * We use createOrAdjustTransaction instead of createTransaction because
+     * we must guarantee a way of idempotent update of the transaction due to the
+     * migration requirements. The transaction can be created in the old flow, but committed in the new flow.
+     */
+    return this.client.createOrAdjustTransaction({ model: { createTransactionModel: model } });
   }
 
   async commitTransaction(args: CommitTransactionArgs) {
     return this.client.commitTransaction(args);
   }
 
+  async voidTransaction({
+    transactionCode,
+    companyCode,
+  }: {
+    transactionCode: string;
+    companyCode: string;
+  }) {
+    return this.client.voidTransaction({
+      transactionCode,
+      companyCode,
+      model: { code: VoidReasonCode.DocVoided },
+    });
+  }
+
   async validateAddress({ address }: ValidateAddressArgs) {
     return this.client.resolveAddress(address);
   }
 
-  async getTaxCodes() {
+  async getFilteredTaxCodes({ filter }: { filter: string | null }) {
     const taxCodeService = new AvataxClientTaxCodeService(this.client);
 
-    return taxCodeService.getTaxCodes();
+    return taxCodeService.getFilteredTaxCodes({ filter });
+  }
+
+  async ping() {
+    return this.client.ping();
+  }
+
+  async getEntityUseCode(useCode: string) {
+    return this.client.listEntityUseCodes({
+      // https://developer.avalara.com/avatax/filtering-in-rest/
+      filter: `code eq ${useCode}`,
+    });
   }
 }

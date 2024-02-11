@@ -1,4 +1,4 @@
-import { Box, BoxProps } from "@saleor/macaw-ui/next";
+import { Box, BoxProps } from "@saleor/macaw-ui";
 import { defaultPadding } from "./ui-defaults";
 
 export const BoxFooter = (props: BoxProps) => {
@@ -12,6 +12,7 @@ export const BoxFooter = (props: BoxProps) => {
       gap={defaultPadding}
       flexDirection="row"
       justifyContent="flex-end"
+      alignItems="center"
       {...props}
     >
       {props.children}

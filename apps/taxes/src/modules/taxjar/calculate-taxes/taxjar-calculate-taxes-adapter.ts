@@ -1,12 +1,14 @@
 import { AuthData } from "@saleor/app-sdk/APL";
 import { TaxBaseFragment } from "../../../../generated/graphql";
-import { Logger, createLogger } from "../../../lib/logger";
+import { ClientLogger } from "../../logs/client-logger";
 import { CalculateTaxesResponse } from "../../taxes/tax-provider-webhook";
 import { WebhookAdapter } from "../../taxes/tax-webhook-adapter";
 import { FetchTaxForOrderArgs, TaxJarClient } from "../taxjar-client";
 import { TaxJarConfig } from "../taxjar-connection-schema";
+import { normalizeTaxJarError } from "../taxjar-error-normalizer";
 import { TaxJarCalculateTaxesPayloadService } from "./taxjar-calculate-taxes-payload-service";
 import { TaxJarCalculateTaxesResponseTransformer } from "./taxjar-calculate-taxes-response-transformer";
+import { createLogger } from "../../../logger";
 
 export type TaxJarCalculateTaxesPayload = {
   taxBase: TaxBaseFragment;
@@ -18,9 +20,23 @@ export type TaxJarCalculateTaxesResponse = CalculateTaxesResponse;
 export class TaxJarCalculateTaxesAdapter
   implements WebhookAdapter<TaxJarCalculateTaxesPayload, TaxJarCalculateTaxesResponse>
 {
-  private logger: Logger;
-  constructor(private readonly config: TaxJarConfig, private authData: AuthData) {
-    this.logger = createLogger({ name: "TaxJarCalculateTaxesAdapter" });
+  private logger = createLogger("TaxJarCalculateTaxesAdapter");
+  private authData: AuthData;
+  private readonly config: TaxJarConfig;
+  private readonly clientLogger: ClientLogger;
+
+  constructor({
+    config,
+    clientLogger,
+    authData,
+  }: {
+    config: TaxJarConfig;
+    clientLogger: ClientLogger;
+    authData: AuthData;
+  }) {
+    this.clientLogger = clientLogger;
+    this.authData = authData;
+    this.config = config;
   }
 
   // todo: refactor because its getting too big
@@ -32,15 +48,31 @@ export class TaxJarCalculateTaxesAdapter
     this.logger.debug("Calling TaxJar fetchTaxForOrder with transformed payload...");
 
     const client = new TaxJarClient(this.config);
-    const response = await client.fetchTaxForOrder(target);
 
-    this.logger.debug("TaxJar fetchTaxForOrder responded with:");
+    try {
+      const response = await client.fetchTaxForOrder(target);
 
-    const responseTransformer = new TaxJarCalculateTaxesResponseTransformer();
-    const transformedResponse = responseTransformer.transform(payload, response);
+      this.logger.debug("TaxJar fetchTaxForOrder responded with:");
 
-    this.logger.debug("Transformed TaxJar fetchTaxForOrder response to");
+      const responseTransformer = new TaxJarCalculateTaxesResponseTransformer();
+      const transformedResponse = responseTransformer.transform(payload, response);
 
-    return transformedResponse;
+      this.logger.debug("Transformed TaxJar fetchTaxForOrder response to");
+
+      return transformedResponse;
+    } catch (e) {
+      const error = normalizeTaxJarError(e);
+
+      this.clientLogger.push({
+        event: "[CalculateTaxes] fetchTaxForOrder",
+        status: "error",
+        payload: {
+          input: target,
+          output: error.message,
+        },
+      });
+
+      throw error;
+    }
   }
 }

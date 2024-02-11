@@ -42,6 +42,9 @@ apps/**/generated
 
 .sentryclirc
 
+.vscode/
+.cspellcache
+
 # Local .terraform directories
 **/.terraform/*
 

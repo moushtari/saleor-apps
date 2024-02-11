@@ -2,7 +2,7 @@ import { NextPage } from "next";
 import React from "react";
 
 import { useChannelsExistenceChecking } from "../modules/app-configuration/channels/use-channels-existence-checking";
-import { Box, Button, Text } from "@saleor/macaw-ui/next";
+import { Box, Button, Text } from "@saleor/macaw-ui";
 import { AppSection } from "../modules/ui/app-section";
 import { Paragraph } from "../modules/ui/paragraph";
 import { TextLink } from "@saleor/apps-ui";
@@ -10,6 +10,9 @@ import { ConnectedS3ConfigurationForm } from "../modules/app-configuration/s3-co
 import { ChannelsConfigAccordion } from "../modules/app-configuration/channels-config-accordion";
 import { useRouter } from "next/router";
 import { CategoryMappingPreview } from "../modules/category-mapping/ui/category-mapping-preview";
+import { ConnectedAttributeMappingForm } from "../modules/app-configuration/attribute-mapping-form";
+import { ConnectedTitleFormattingForm } from "../modules/app-configuration/title-formatting-form";
+import { ConnectedImageConfigurationForm } from "../modules/app-configuration/image-configuration-form";
 
 const ConfigurationPage: NextPage = () => {
   useChannelsExistenceChecking();
@@ -89,33 +92,57 @@ const ConfigurationPage: NextPage = () => {
           <Box>
             <Paragraph size={"small"}>App will generate separate feed for each channel</Paragraph>
             <Paragraph size={"small"}>
-              Provide your storefront homepage URL and product template. Use following placeholders:
+              Provide your storefront homepage URL and product template. Use{" "}
+              <TextLink href="https://handlebarsjs.com/" newTab>
+                Handlebars
+              </TextLink>{" "}
+              format. Example of the variables you can use:
             </Paragraph>
             <ul>
               <li>
                 <Text size={"small"}>
-                  <code>{"{productSlug}"}</code> - to inject slug of the product
+                  <code>{"{{ variant.product.slug }}"}</code> - product `slug`
                 </Text>
               </li>
               <li>
                 <Text size={"small"}>
-                  <code>{"{variantId}"}</code> - to inject id of the variant
-                </Text>
-              </li>
-              <li>
-                <Text size={"small"}>
-                  <code>{"{productId}"}</code> - to inject id of the product
+                  <code>{"{{ variant.id }}"}</code> - product variant id
                 </Text>
               </li>
             </ul>
             <Paragraph size={"small"}>For example following pattern:</Paragraph>
             <Paragraph size={"small"}>
-              <code>{"https://my-shop.com/p/{productSlug}/{variantId}"}</code>
+              <code>{"https://my-shop.com/p/{{ variant.product.slug}/{{ variant.id }}"}</code>
             </Paragraph>
             <Paragraph size={"small"}>Will produce:</Paragraph>
             <Paragraph size={"small"}>
               <code>{"https://my-shop.com/p/t-shirt/Xyp2asZ"}</code>
             </Paragraph>
+          </Box>
+        }
+      />
+      <AppSection
+        data-testid={"title-configuration-section"}
+        __marginBottom="100px"
+        includePadding
+        heading={"Item title"}
+        mainContent={
+          <Box>
+            <ConnectedTitleFormattingForm />
+          </Box>
+        }
+        sideContent={
+          <Box>
+            <Paragraph size={"small"}>
+              Customize title of the products. Use{" "}
+              <TextLink href="https://handlebarsjs.com/" newTab>
+                Handlebars
+              </TextLink>{" "}
+              format.
+            </Paragraph>
+            <TextLink href="https://support.google.com/merchants/answer/6324415" newTab>
+              Item title specification.
+            </TextLink>
           </Box>
         }
       />
@@ -142,6 +169,71 @@ const ConfigurationPage: NextPage = () => {
                 Read more
               </TextLink>
             </Paragraph>
+          </Box>
+        }
+      />
+      <AppSection
+        data-testid={"attributes-mapping-section"}
+        __marginBottom="100px"
+        includePadding
+        heading={"Attributes mapping"}
+        mainContent={<ConnectedAttributeMappingForm />}
+        sideContent={
+          <Box>
+            <Paragraph size={"small"}>
+              Choose which product attributes should be used for the feed. If product has multiple
+              attribute values, for example &quot;Primary color&quot; and &quot;Secondary
+              color&quot;, both values will be used according to Google guidelines:
+            </Paragraph>
+            <ul>
+              <li>
+                <TextLink href="https://support.google.com/merchants/answer/6324351" newTab>
+                  Brand
+                </TextLink>
+              </li>
+              <li>
+                <TextLink href="https://support.google.com/merchants/answer/6324487" newTab>
+                  Color
+                </TextLink>
+              </li>
+              <li>
+                <TextLink href="https://support.google.com/merchants/answer/6324410" newTab>
+                  Material
+                </TextLink>
+              </li>
+              <li>
+                <TextLink href="https://support.google.com/merchants/answer/6324483" newTab>
+                  Pattern
+                </TextLink>
+              </li>
+              <li>
+                <TextLink href="https://support.google.com/merchants/answer/6324492" newTab>
+                  Size
+                </TextLink>
+              </li>
+            </ul>
+          </Box>
+        }
+      />
+
+      <AppSection
+        data-testid={"image-configuration-section"}
+        __marginBottom="100px"
+        includePadding
+        heading={"Image configuration"}
+        mainContent={<ConnectedImageConfigurationForm />}
+        sideContent={
+          <Box>
+            <Paragraph size={"small"}>
+              Configure size of the images submitted in the feed.
+            </Paragraph>
+            <ul>
+              <li>
+                <TextLink href="https://support.google.com/merchants/answer/6324350?hl=en" newTab>
+                  Image link documentation
+                </TextLink>
+              </li>
+            </ul>
           </Box>
         }
       />

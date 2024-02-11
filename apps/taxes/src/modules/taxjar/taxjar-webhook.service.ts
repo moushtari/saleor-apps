@@ -1,45 +1,66 @@
-import { OrderCreatedSubscriptionFragment, TaxBaseFragment } from "../../../generated/graphql";
-import { Logger, createLogger } from "../../lib/logger";
+import { AuthData } from "@saleor/app-sdk/APL";
+import {
+  OrderCancelledEventSubscriptionFragment,
+  OrderConfirmedSubscriptionFragment,
+} from "../../../generated/graphql";
+import { CalculateTaxesPayload } from "../../pages/api/webhooks/checkout-calculate-taxes";
+import { ProviderWebhookService } from "../taxes/tax-provider-webhook";
 import { TaxJarCalculateTaxesAdapter } from "./calculate-taxes/taxjar-calculate-taxes-adapter";
+import { TaxJarOrderConfirmedAdapter } from "./order-confirmed/taxjar-order-confirmed-adapter";
 import { TaxJarClient } from "./taxjar-client";
 import { TaxJarConfig } from "./taxjar-connection-schema";
-import { TaxJarOrderCreatedAdapter } from "./order-created/taxjar-order-created-adapter";
-import { ProviderWebhookService } from "../taxes/tax-provider-webhook";
-import { AuthData } from "@saleor/app-sdk/APL";
+import { ClientLogger, createClientLogger } from "../logs/client-logger";
+import { createLogger } from "../../logger";
 
 export class TaxJarWebhookService implements ProviderWebhookService {
   client: TaxJarClient;
-  private logger: Logger;
+  private logger = createLogger("TaxJarWebhookService");
   private config: TaxJarConfig;
+  private clientLogger: ClientLogger;
+  private authData: AuthData;
 
-  constructor(config: TaxJarConfig, private authData: AuthData) {
+  constructor({
+    clientLogger,
+    config,
+    authData,
+  }: {
+    clientLogger: ClientLogger;
+    config: TaxJarConfig;
+    authData: AuthData;
+  }) {
     const taxJarClient = new TaxJarClient(config);
 
     this.client = taxJarClient;
     this.config = config;
-    this.logger = createLogger({
-      name: "TaxJarWebhookService",
-    });
+    this.authData = authData;
+    this.clientLogger = clientLogger;
   }
 
-  async calculateTaxes(taxBase: TaxBaseFragment) {
-    const adapter = new TaxJarCalculateTaxesAdapter(this.config, this.authData);
+  async calculateTaxes(payload: CalculateTaxesPayload) {
+    const adapter = new TaxJarCalculateTaxesAdapter({
+      config: this.config,
+      authData: this.authData,
+      clientLogger: this.clientLogger,
+    });
 
-    const response = await adapter.send({ taxBase });
+    const response = await adapter.send(payload);
 
     return response;
   }
 
-  async createOrder(order: OrderCreatedSubscriptionFragment) {
-    const adapter = new TaxJarOrderCreatedAdapter(this.config, this.authData);
+  async confirmOrder(order: OrderConfirmedSubscriptionFragment) {
+    const adapter = new TaxJarOrderConfirmedAdapter({
+      config: this.config,
+      authData: this.authData,
+      clientLogger: this.clientLogger,
+    });
 
     const response = await adapter.send({ order });
 
     return response;
   }
 
-  // * TaxJar doesn't require any action on order fulfillment
-  async fulfillOrder() {
-    return { ok: true };
+  async cancelOrder(payload: OrderCancelledEventSubscriptionFragment) {
+    // TaxJar isn't implemented yet
   }
 }

@@ -1,5 +1,23 @@
 # eslint-config-saleor
 
+## 0.4.5
+
+### Patch Changes
+
+- 261957f: Updated dependencies: vite, vitest, eslint, prettier, dotenv, turbo, syncpack, changesets, lint staged
+
+## 0.4.4
+
+### Patch Changes
+
+- e7c2d3a: Updated and ESLint dependencies
+
+## 0.4.3
+
+### Patch Changes
+
+- 2d77bca: Updated Next.js to 13.4.8
+
 ## 0.4.2
 
 ### Patch Changes

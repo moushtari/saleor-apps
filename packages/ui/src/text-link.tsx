@@ -1,5 +1,5 @@
 import { actions, useAppBridge } from "@saleor/app-sdk/app-bridge";
-import { Text, TextProps } from "@saleor/macaw-ui/next";
+import { Text, TextProps } from "@saleor/macaw-ui";
 import { useRouter } from "next/router";
 
 export interface TextLinkProps extends TextProps {
@@ -13,6 +13,7 @@ const BaseTextLink = (props: TextLinkProps) => {
       <Text
         transition={"ease"}
         variant={"bodyStrong"}
+        size={props.size}
         color={{
           default: "text3Decorative",
           hover: "text1Decorative",

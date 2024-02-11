@@ -1,6 +1,6 @@
 import { SendgridConfiguration } from "../configuration/sendgrid-config-schema";
 import { BoxWithBorder } from "../../../components/box-with-border";
-import { Box, Button, Text } from "@saleor/macaw-ui/next";
+import { Box, Button, Text } from "@saleor/macaw-ui";
 import { defaultPadding } from "../../../components/ui-defaults";
 import { useDashboardNotification } from "@saleor/apps-shared";
 import { trpcClient } from "../../trpc/trpc-client";
@@ -57,7 +57,7 @@ export const SendgridSenderSection = ({ configuration }: SendgridSenderSectionPr
         <Text as="p">
           Authenticating the sender is required to send emails. Configure your sender in{" "}
           <TextLink href="https://app.sendgrid.com/settings/sender_auth" newTab={true}>
-            Sendgrid dashboard
+            SendGrid dashboard
           </TextLink>{" "}
           and choose it from the list.
         </Text>

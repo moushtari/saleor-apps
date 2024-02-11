@@ -1,10 +1,10 @@
-import { createLogger } from "@saleor/apps-shared";
 import { compileMjml } from "./compile-mjml";
 import { compileHandlebarsTemplate } from "./compile-handlebars-template";
 import { sendEmailWithSmtp, SendMailArgs } from "./send-email-with-smtp";
 import { MessageEventTypes } from "../event-handlers/message-event-types";
 import { htmlToPlaintext } from "./html-to-plaintext";
 import { SmtpConfiguration } from "./configuration/smtp-config-schema";
+import { createLogger } from "../../logger";
 
 interface SendSmtpArgs {
   smtpConfiguration: SmtpConfiguration;
@@ -26,8 +26,8 @@ export const sendSmtp = async ({
   event,
   smtpConfiguration,
 }: SendSmtpArgs) => {
-  const logger = createLogger({
-    fn: "sendSmtp",
+  const logger = createLogger("sendSmtp", {
+    name: "sendSmtp",
     event,
   });
 
@@ -35,24 +35,12 @@ export const sendSmtp = async ({
 
   if (!eventSettings) {
     logger.debug("No active settings for this event, skipping");
-    return {
-      errors: [
-        {
-          message: "No active settings for this event",
-        },
-      ],
-    };
+    return;
   }
 
   if (!eventSettings.active) {
     logger.debug("Event settings are not active, skipping");
-    return {
-      errors: [
-        {
-          message: "Event settings are not active",
-        },
-      ],
-    };
+    return;
   }
 
   logger.debug("Sending an email using MJML");
@@ -61,10 +49,8 @@ export const sendSmtp = async ({
 
   const { template: emailSubject, errors: handlebarsSubjectErrors } = compileHandlebarsTemplate(
     subject,
-    payload
+    payload,
   );
-
-  logger.warn(`email subject ${emailSubject} ${subject}`);
 
   if (handlebarsSubjectErrors?.length) {
     logger.error("Error during the handlebars subject template compilation");
@@ -80,9 +66,11 @@ export const sendSmtp = async ({
     };
   }
 
+  logger.debug({ emailSubject }, "Subject compiled");
+
   const { template: mjmlTemplate, errors: handlebarsErrors } = compileHandlebarsTemplate(
     rawTemplate,
-    payload
+    payload,
   );
 
   if (handlebarsErrors?.length) {
@@ -98,6 +86,8 @@ export const sendSmtp = async ({
       errors: [{ message: "Mjml template message is empty, skipping" }],
     };
   }
+
+  logger.debug("Handlebars template compiled");
 
   const { html: emailBodyHtml, errors: mjmlCompilationErrors } = compileMjml(mjmlTemplate);
 
@@ -120,6 +110,8 @@ export const sendSmtp = async ({
     };
   }
 
+  logger.debug("MJML template compiled");
+
   const { plaintext: emailBodyPlaintext } = htmlToPlaintext(emailBodyHtml);
 
   if (!emailBodyPlaintext || !emailBodyPlaintext?.length) {
@@ -128,6 +120,8 @@ export const sendSmtp = async ({
       errors: [{ message: "Email body could not be converted to plaintext" }],
     };
   }
+
+  logger.debug("Email body converted to plaintext");
 
   const sendEmailSettings: SendMailArgs = {
     mailData: {
@@ -140,6 +134,7 @@ export const sendSmtp = async ({
     smtpSettings: {
       host: smtpConfiguration.smtpHost,
       port: parseInt(smtpConfiguration.smtpPort, 10),
+      encryption: smtpConfiguration.encryption,
     },
   };
 
@@ -155,5 +150,5 @@ export const sendSmtp = async ({
   if (smtpErrors?.length) {
     return { errors: smtpErrors };
   }
-  logger.debug(response?.response);
+  logger.debug(response?.response, "Email sent");
 };

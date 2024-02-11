@@ -1,78 +1,38 @@
 /* eslint-disable turbo/no-undeclared-env-vars */
 
 import * as dotenv from "dotenv";
-import { fetchCloudAplEnvs, getMetadataManagerForEnv, verifyRequiredEnvs } from "./migration-utils";
-import { TaxProvidersV1toV2MigrationManager } from "./tax-providers-migration-v1-to-v2";
-import { TaxChannelsV1toV2MigrationManager } from "./tax-channels-migration-v1-to-v2";
+import { createAppWebhookMigrator } from "./app-webhook-migrator";
+import { fetchCloudAplEnvs, verifyRequiredEnvs } from "./migration-utils";
+import { migrateTaxes } from "./1.15-taxes-migration";
 
 dotenv.config();
 
 const runReport = async () => {
-  console.log("Starting running migration");
+  console.log("Starting runReport");
 
   verifyRequiredEnvs();
 
-  console.log("Envs verified, fetching envs");
+  console.log("Env vars verified. Fetching envs");
+
   const allEnvs = await fetchCloudAplEnvs().catch((r) => {
     console.error(r);
 
     process.exit(1);
   });
 
-  const report = {
-    taxProviders: [] as string[],
-    taxChannels: [] as string[],
-    none: [] as string[],
-  };
-
   for (const env of allEnvs) {
-    let isTaxProvidersMigrated = false;
-    let isTaxChannelsMigrated = false;
+    try {
+      console.log("--------------------");
+      console.log(`Working on app: ${env.appId} on domain ${env.domain}`);
 
-    console.log("Working on env: ", env.saleorApiUrl);
+      const webhookMigrator = createAppWebhookMigrator(env, { mode: "report" });
 
-    const metadataManager = getMetadataManagerForEnv(env.saleorApiUrl, env.token, env.appId);
-
-    const taxProvidersMigrationManager = new TaxProvidersV1toV2MigrationManager(
-      metadataManager,
-      env.saleorApiUrl,
-      { mode: "report" }
-    );
-
-    const taxProvidersMigratedConfig = await taxProvidersMigrationManager.migrateIfNeeded();
-
-    if (taxProvidersMigratedConfig) {
-      console.log("Config migrated", taxProvidersMigratedConfig);
-      isTaxProvidersMigrated = true;
-    }
-
-    const taxChannelsMigrationManager = new TaxChannelsV1toV2MigrationManager(
-      metadataManager,
-      env.saleorApiUrl,
-      { mode: "report" }
-    );
-
-    const taxChannelsMigratedConfig = await taxChannelsMigrationManager.migrateIfNeeded();
-
-    if (taxChannelsMigratedConfig) {
-      console.log("Config migrated", taxChannelsMigratedConfig);
-      isTaxChannelsMigrated = true;
-    }
-
-    if (isTaxProvidersMigrated) {
-      report.taxProviders.push(env.saleorApiUrl);
-    }
-
-    if (isTaxChannelsMigrated) {
-      report.taxChannels.push(env.saleorApiUrl);
-    }
-
-    if (!isTaxProvidersMigrated && !isTaxChannelsMigrated) {
-      report.none.push(env.saleorApiUrl);
+      await migrateTaxes(webhookMigrator);
+    } catch (error) {
+      console.log("⏩ Error while migrating webhook. Continuing with the next app.");
+      continue;
     }
   }
-
-  console.log("Report", report);
 };
 
 runReport();

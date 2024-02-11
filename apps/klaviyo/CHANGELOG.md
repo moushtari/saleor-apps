@@ -1,5 +1,134 @@
 # saleor-app-klaviyo
 
+## 1.10.3
+
+### Patch Changes
+
+- 5f564a0: Updated @saleor/app-sdk to 0.47.2
+
+## 1.10.2
+
+### Patch Changes
+
+- 531e7c1: Disabled Sentry tracing and Replays by default
+
+## 1.10.1
+
+### Patch Changes
+
+- 99f7066: Updated Macaw UI to 1.0.0-pre.7. Removed legacy Material UI dependency from older Macaw. Code was updated to work properly with some API changes
+- Updated dependencies [99f7066]
+  - @saleor/apps-shared@1.9.2
+  - @saleor/apps-ui@1.2.2
+
+## 1.10.0
+
+### Minor Changes
+
+- a50df02: Reduced Sentry traces sample rate to 0.1
+
+## 1.9.2
+
+### Patch Changes
+
+- fdabc51: Mapped app-sdk package to root library
+- Updated dependencies [fdabc51]
+  - @saleor/apps-shared@1.9.1
+  - @saleor/apps-ui@1.2.1
+
+## 1.9.1
+
+### Patch Changes
+
+- 148a6d7: Updated Sentry to 7.77.0
+
+## 1.9.0
+
+### Minor Changes
+
+- 4aee4e1: Improved app layout to match modern style.
+
+### Patch Changes
+
+- 5dee65a: Updated dependencies:
+  - @graphql-codegen/cli@5.0.0
+- 2e29699: Updated Sentry package
+- 4aee4e1: Fixed error where config couldn't be saved
+
+## 1.8.6
+
+### Patch Changes
+
+- 30140ee: Improved some text typos.
+- Updated dependencies [e8660e8]
+- Updated dependencies [e8660e8]
+- Updated dependencies [e8660e8]
+- Updated dependencies [e8660e8]
+  - @saleor/apps-shared@1.9.0
+
+## 1.8.5
+
+### Patch Changes
+
+- a81f061: Updated Macaw to pre-127
+- fcc37e7: Remove clsx package from the projects no longer using it.
+- Updated dependencies [2a1385b]
+- Updated dependencies [a81f061]
+- Updated dependencies [fcc37e7]
+  - @saleor/apps-shared@1.8.1
+
+## 1.8.4
+
+### Patch Changes
+
+- 8b3d961: Updated Macaw UI to pre.118
+- Updated dependencies [8b3d961]
+- Updated dependencies [c50797e]
+  - @saleor/apps-shared@1.8.0
+
+## 1.8.3
+
+### Patch Changes
+
+- 261957f: Updated dependencies: vite, vitest, eslint, prettier, dotenv, turbo, syncpack, changesets, lint staged
+- Updated dependencies [261957f]
+  - @saleor/apps-shared@1.7.6
+
+## 1.8.2
+
+### Patch Changes
+
+- 2fab86b: Updated graphql package to 16.7.1 and @graphql-codegen related dependencies to the latest version.
+- aa6fec1: Updated Macaw UI to pre-106
+- Updated dependencies [aa6fec1]
+  - @saleor/apps-shared@1.7.5
+
+## 1.8.1
+
+### Patch Changes
+
+- e7c2d3a: Updated and ESLint dependencies
+- 3c6cd4c: Updated the @saleor/app-sdk package to version 0.41.1.
+- 6210447: Updated tRPC packages to 10.34.0
+- Updated dependencies [70cb741]
+- Updated dependencies [e7c2d3a]
+- Updated dependencies [3c6cd4c]
+  - @saleor/apps-shared@1.7.4
+
+## 1.8.0
+
+### Minor Changes
+
+- a1f083c: Filled "about" field in App Manifest. Dashboard will display it in app details page now.
+
+### Patch Changes
+
+- 2d77bca: Updated Next.js to 13.4.8
+- 6299e06: Update @saleor/app-sdk to 0.41.0
+- Updated dependencies [2d77bca]
+- Updated dependencies [6299e06]
+  - @saleor/apps-shared@1.7.3
+
 ## 1.7.1
 
 ### Patch Changes

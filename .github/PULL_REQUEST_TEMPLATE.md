@@ -8,5 +8,8 @@
 
 ## Checklist
 
-- [ ] `.github/dependabot.yaml` is up-to date.
 - [ ] I added changesets and [read good practices](/.changeset/README.md).
+
+## Known problems
+
+- If deployment of `saleor-app-search` fails - rerun vercel deployment. We work with Vercel of fixing that but for now we suggest this as workaround.
